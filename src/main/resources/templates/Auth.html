@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .auth-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        .auth-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .auth-container form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .auth-container input[type="text"],
+        .auth-container input[type="password"],
+        .auth-container input[type="email"] {
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .auth-container button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .auth-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .auth-switch a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-container" id="loginForm">
+    <h2>Login</h2>
+    <form>
+        <label>
+            <input type="text" placeholder="Username" required>
+        </label>
+        <label>
+            <input type="password" placeholder="Password" required>
+        </label>
+        <button type="submit">Login</button>
+    </form>
+    <div class="auth-switch">
+        Don't have an account? <a href="#" onclick="toggleForm()">Sign up</a>
+    </div>
+</div>
+
+<div class="auth-container" id="signupForm" style="display: none;">
+    <h2>Sign Up</h2>
+    <form>
+        <label>
+            <input type="text" placeholder="Username" required>
+        </label>
+        <label>
+            <input type="email" placeholder="Email" required>
+        </label>
+        <label>
+            <input type="password" placeholder="Password" required>
+        </label>
+        <button type="submit">Sign Up</button>
+    </form>
+    <div class="auth-switch">
+        Already have an account? <a href="#" onclick="toggleForm()">Login</a>
+    </div>
+</div>
+
+<script>
+    function toggleForm() {
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+
+        if (loginForm.style.display === 'none') {
+            loginForm.style.display = 'block';
+            signupForm.style.display = 'none';
+        } else {
+            loginForm.style.display = 'none';
+            signupForm.style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>
