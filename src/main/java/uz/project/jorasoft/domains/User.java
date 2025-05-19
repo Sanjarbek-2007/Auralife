@@ -35,6 +35,7 @@ public class User {
     private String phoneNumber;
     private Date birthDate;
     private String gender;
+    private String status;
     @ManyToMany
     private List<Role> roles;
 

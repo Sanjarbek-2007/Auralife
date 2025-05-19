@@ -15,4 +15,8 @@ public class JwtResponse extends Response {
     public JwtResponse(String accessToken) {
         this.accessToken = accessToken;
     }
+    public JwtResponse(String accessToken, String message) {
+        this.accessToken = accessToken;
+        super.setMessage(message);
+    }
 }

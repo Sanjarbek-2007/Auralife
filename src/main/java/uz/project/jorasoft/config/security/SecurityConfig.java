@@ -37,7 +37,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
                 version = "${app.version}",
                 contact = @Contact(
                         name = "OLIX",
-                        url = "https://github.com/Sanjarbek-2007/olix/tree/development",
+                        url = "https://github.com/Sanjarbek-2007/jorasoft",
                         email = "olix@gmail.com"
                 ),
                 license = @License(
@@ -48,7 +48,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
                 summary = "The project is fully supported by DS team"
         ),
         servers = {
-                @Server(url = "http://localhost:8081/" ,
+                @Server(url = "http://localhost:20007/" ,
                         description = "Development Server"),
         }
 )
