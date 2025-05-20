@@ -1,0 +1,24 @@
+package uz.project.auralife.domains.enums;
+
+import lombok.Getter;
+
+@Getter
+public enum CodeTypes {
+    PASSWORD_RESET("password_reset"),
+    ACCOUNT_ACTIVISION("account_activision");
+
+    private final String type;
+    CodeTypes(String type) {
+        this.type = type;
+    }
+
+    public  CodeTypes getCodeType(String type) {
+        for (CodeTypes c : CodeTypes.values()) {
+            if (c.type.equals(type)) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+}
