@@ -1,7 +1,6 @@
 spring:
   application:
-    name: Jorasoft
-
+    name: Auralife
 
 
   jpa:
@@ -22,6 +21,11 @@ spring:
           auth: true
           starttls:
             enable: true
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auralife
+    username: postgres
+    password: doniyor2007
+    driver-class-name: org.postgresql.Driver
 
 secret:
   key: ApeVFjUOyTmk7XYwgcYwIEsix1mALAsQhftYQqWHE8P6kcnqbZv0Uxj9HduKEvjXzz0sVYCG0ZjSBtmxadtAiQ==
@@ -29,3 +33,9 @@ secret:
 
 server:
   port: 20007
+
+
+api:
+  url: http://localhost:20007
+  photoUrl: http://localhost:20007/photo/get
+  photo-save-path: src/main/resources/images/

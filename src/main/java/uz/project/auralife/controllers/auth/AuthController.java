@@ -50,4 +50,8 @@ public class AuthController {
     public ResponseEntity<?> confirmResetPassword(@RequestBody ConfirmResetPasswordDTO dto){
         return ResponseEntity.ok(authService.resetPassword(dto));
     }
+
+
+
+
 }

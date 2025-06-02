@@ -5,8 +5,10 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.project.auralife.config.security.JwtProvider;
@@ -15,6 +17,7 @@ import uz.project.auralife.controllers.auth.signup.ConfirmResetPasswordDTO;
 import uz.project.auralife.domains.ActivisationCode;
 import uz.project.auralife.domains.enums.Apps;
 import uz.project.auralife.domains.enums.CodeTypes;
+import uz.project.auralife.dtos.ProfileDTO;
 import uz.project.auralife.repositories.ActivisationCodeRepository;
 import uz.project.auralife.responces.ExceptionResponse;
 import uz.project.auralife.responces.JwtResponse;
@@ -30,6 +33,7 @@ import uz.project.auralife.responces.Response;
 import org.springframework.beans.factory.annotation.Value;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AuthService {
     private final PasswordEncoder passwordEncoder;
@@ -40,7 +44,7 @@ public class AuthService {
     private final EmailService emailService;
     private CodeTypes codeType;
 
-    @Value("${host.link.beginning}")
+    @Value("${api.url}")
     private String link;
 
     public User getUserEntity(SignupDto dto){
@@ -216,6 +220,9 @@ public class AuthService {
         });
         return ResponseEntity.ok("We send " + type+" code "+"account with email : " + email);
     }
+
+
+
 }
 
 

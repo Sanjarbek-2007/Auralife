@@ -28,5 +28,32 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByEmailAndStatusIgnoreCase(String email, String status);
 
+    @Transactional
+    @Modifying
+    @Query("update User u set u.firstName = ?1 where u.phoneNumber = ?2")
+    int updateFirstNameByPhoneNumber(String firstName, String phoneNumber);
+    @Transactional
+    @Modifying
+    @Query("update User u set u.lastName = ?1 where u.phoneNumber = ?2")
+    int updateLastNameByPhoneNumber(String lastName, String phoneNumber);
+
+
+    @Modifying
+    @Query("UPDATE User u SET u.email = :email WHERE u.phoneNumber = :phoneNumber")
+    void updateEmailByPhoneNumber(String phoneNumber, String email);
+
+    @Modifying
+    @Query("UPDATE User u SET u.phoneNumber = :newPhoneNumber WHERE u.phoneNumber = :currentPhoneNumber")
+    void updatePhoneNumberByPhoneNumber(String currentPhoneNumber, String newPhoneNumber);
+
+    @Modifying
+    @Query("UPDATE User u SET u.profilePictures = :profilePicture WHERE u.phoneNumber = :phoneNumber")
+    void updateProfilePictureByPhoneNumber(String phoneNumber, String profilePicture);
+
+
+    @Transactional
+    @Modifying
+    @Query("update User u set u.password = ?1 where u.phoneNumber = ?2")
+    void updatePasswordByPhoneNumber(String password, String phoneNumber);
 
 }

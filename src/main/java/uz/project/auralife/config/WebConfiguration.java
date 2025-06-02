@@ -17,7 +17,7 @@ public class WebConfiguration {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3002", "http://localhost:3001","http://10.10.2.51:3001") // Adjust this as per your frontend origin
+                        .allowedOrigins("http://localhost:3002", "http://localhost:3001","http://localhost:30007","http://10.10.2.51:3001") // Adjust this as per your frontend origin
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
