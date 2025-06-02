@@ -32,12 +32,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @OpenAPIDefinition(
         info = @Info(
-                title = "OLIX",
+                title = "Auralife",
                 description = "This application is for monkey only",
                 version = "${app.version}",
                 contact = @Contact(
-                        name = "OLIX",
-                        url = "https://github.com/Sanjarbek-2007/jorasoft",
+                        name = "Auralife",
+                        url = "https://github.com/Sanjarbek-2007/Auralife",
                         email = "olix@gmail.com"
                 ),
                 license = @License(

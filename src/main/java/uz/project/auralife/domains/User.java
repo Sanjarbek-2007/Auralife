@@ -37,6 +37,7 @@ public class User {
     private String status;
     @ManyToMany
     private List<Role> roles;
+    private String apps;
 
 
 }

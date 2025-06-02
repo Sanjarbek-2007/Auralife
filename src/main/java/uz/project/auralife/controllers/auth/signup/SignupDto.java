@@ -9,6 +9,7 @@ public record SignupDto(
         String password,
         String phoneNumber,
         Date birthDate,
-        String gender
+        String gender,
+        String app
 
 ) {}

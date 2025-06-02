@@ -29,7 +29,7 @@ public class AuthController {
     }
     @PostMapping("/signin")
     public ResponseEntity<?> signin(@RequestBody SigninDto dto){  return authService.signin(dto); }
-    @GetMapping("/checkup")
+    @PostMapping ("/checkup")
     public ResponseEntity<?> checkup(@RequestBody CheckUserExistaceDto dto){
         return ResponseEntity.ok(authService.checkExistance(dto));
     }

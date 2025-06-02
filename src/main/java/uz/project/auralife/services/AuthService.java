@@ -13,6 +13,7 @@ import uz.project.auralife.config.security.JwtProvider;
 import uz.project.auralife.controllers.auth.signup.ActivateRequestDTO;
 import uz.project.auralife.controllers.auth.signup.ConfirmResetPasswordDTO;
 import uz.project.auralife.domains.ActivisationCode;
+import uz.project.auralife.domains.enums.Apps;
 import uz.project.auralife.domains.enums.CodeTypes;
 import uz.project.auralife.repositories.ActivisationCodeRepository;
 import uz.project.auralife.responces.ExceptionResponse;
@@ -44,6 +45,12 @@ public class AuthService {
 
     public User getUserEntity(SignupDto dto){
         System.out.println(dto.phoneNumber());
+        StringBuilder apps = new StringBuilder();
+        for(Apps app : Apps.values()){
+            if(dto.app().equals(app.toString())){
+                apps.append(app.toString());
+            }
+        }
         return User.builder()
                 .firstName(dto.firstName())
                 .lastName(dto.lastName())
@@ -53,6 +60,7 @@ public class AuthService {
                 .birthDate(dto.birthDate())
                 .gender(dto.gender())
                 .status("non-active")
+                .apps(apps.toString())
                 .build();
     }
     public static String generateCode(int length) {
@@ -105,7 +113,7 @@ public class AuthService {
         }
         if (!dto.email().isEmpty()) {
             String email = dto.email();
-            return  new CheckUserExistanceResponse(userRepository.existsByEmail(email),"",email);
+            return  new CheckUserExistanceResponse(userRepository.existsByEmail(email),"email ",email);
         }
         return new CheckUserExistanceResponse(false, "Phone number or email is free", dto.email()+" or "+dto.phoneNumber());
     }
