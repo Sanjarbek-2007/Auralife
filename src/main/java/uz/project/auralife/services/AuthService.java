@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import uz.project.auralife.config.security.JwtProvider;
@@ -17,7 +16,6 @@ import uz.project.auralife.controllers.auth.signup.ConfirmResetPasswordDTO;
 import uz.project.auralife.domains.ActivisationCode;
 import uz.project.auralife.domains.enums.Apps;
 import uz.project.auralife.domains.enums.CodeTypes;
-import uz.project.auralife.dtos.ProfileDTO;
 import uz.project.auralife.repositories.ActivisationCodeRepository;
 import uz.project.auralife.responces.ExceptionResponse;
 import uz.project.auralife.responces.JwtResponse;
@@ -78,7 +76,7 @@ public class AuthService {
         return code.toString();
     }
     public ResponseEntity<Response> signup(SignupDto dto)  {
-        CheckUserExistanceResponse userExistanceResponse = checkExistance(new CheckUserExistaceDto(dto.phoneNumber(), dto.email()));
+        CheckUserExistanceResponse userExistanceResponse = checkExistance(new CheckUserExistaceDto(dto.phoneNumber(), dto.email(), dto.username()));
 
         if (!userExistanceResponse.getExists()) {
             User user = getUserEntity(dto);
@@ -106,8 +104,11 @@ public class AuthService {
             String token = jwtProvider.generate(user );
             return new JwtResponse(token);
     }
+    public Boolean checkExistanceByUserId(Long userId) {
+        return userRepository.existsById(userId);
+    }
     public CheckUserExistanceResponse checkExistance(CheckUserExistaceDto dto) {
-        if(dto.phoneNumber().isEmpty() && dto.email().isEmpty()){
+        if(dto.phoneNumber().isEmpty() && dto.email().isEmpty() && dto.username().isEmpty()){
             return new CheckUserExistanceResponse(null, "Please enter a valid phone number or email",null);
         }
         if (!dto.phoneNumber().isEmpty()){
@@ -118,6 +119,10 @@ public class AuthService {
         if (!dto.email().isEmpty()) {
             String email = dto.email();
             return  new CheckUserExistanceResponse(userRepository.existsByEmail(email),"email ",email);
+        }
+        if (!dto.username().isEmpty()) {
+            String username = dto.username();
+            return  new CheckUserExistanceResponse(userRepository.existsByUsername(username),"username",username);
         }
         return new CheckUserExistanceResponse(false, "Phone number or email is free", dto.email()+" or "+dto.phoneNumber());
     }
@@ -155,7 +160,7 @@ public class AuthService {
         if (exists) {
             activationSender(email, CodeTypes.PASSWORD_RESET);
 
-            return ResponseEntity.ok("We send email with code to : "+email+" check your email. ");
+            return ResponseEntity.ok("We have sent you email with code to : "+email+" check your email. ");
         }
         return ResponseEntity.ok("User with email : "+email+" does not exist : Existance " + exists);
 

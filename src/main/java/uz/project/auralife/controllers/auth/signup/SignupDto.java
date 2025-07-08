@@ -5,6 +5,7 @@ import java.util.Date;
 public record SignupDto(
         String firstName,
         String lastName,
+        String username,
         String email,
         String password,
         String phoneNumber,

@@ -1,6 +1,11 @@
 spring:
   application:
-    name: Auralife
+    name: Jorasoft
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auralife
+    username: postgres
+    password: tplink01459520
+    driverClassName: org.postgresql.Driver
 
 
   jpa:
@@ -21,11 +26,6 @@ spring:
           auth: true
           starttls:
             enable: true
-  datasource:
-    url: jdbc:postgresql://localhost:5432/auralife
-    username: postgres
-    password: doniyor2007
-    driver-class-name: org.postgresql.Driver
 
 secret:
   key: ApeVFjUOyTmk7XYwgcYwIEsix1mALAsQhftYQqWHE8P6kcnqbZv0Uxj9HduKEvjXzz0sVYCG0ZjSBtmxadtAiQ==

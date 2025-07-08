@@ -103,6 +103,7 @@ public class   ProfileService {
                     user.getId(),
                     user.getFirstName(),
                     user.getLastName(),
+                    user.getUsername(),
                     user.getEmail(),
                     user.getPhoneNumber(),
                     user.getBirthDate(),

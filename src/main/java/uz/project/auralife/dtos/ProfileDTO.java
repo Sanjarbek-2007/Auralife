@@ -9,6 +9,7 @@ public record ProfileDTO(
         Long id,
         String firstName,
         String lastName,
+        String username,
         String email,
         String phoneNumber,
         Date birthDate,

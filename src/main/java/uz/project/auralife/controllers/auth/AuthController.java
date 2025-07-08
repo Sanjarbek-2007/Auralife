@@ -30,8 +30,14 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<?> signin(@RequestBody SigninDto dto){  return authService.signin(dto); }
     @PostMapping ("/checkup")
-    public ResponseEntity<?> checkup(@RequestBody CheckUserExistaceDto dto){
+    public ResponseEntity<?> checkUp(@RequestBody CheckUserExistaceDto dto){
         return ResponseEntity.ok(authService.checkExistance(dto));
+    }
+    @GetMapping ("/check-up-by-id")
+    public ResponseEntity<?> checkUpById(@RequestParam("userId") Long userId){
+        Boolean body = authService.checkExistanceByUserId(userId);
+        log.info(body.toString()+ "AHAHAHHAHAHHAHAHAHHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        return ResponseEntity.ok(body);
     }
     @PostMapping("/code/send-again")
     public ResponseEntity<?> activateSendAgain(@RequestParam String email, @RequestParam String type){

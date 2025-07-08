@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>uz.project</groupId>
-    <artifactId>Jorasoft</artifactId>
+    <artifactId>Auralife</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>Jorasoft</name>
-    <description>Jorasoft</description>
+    <name>Auralife</name>
+    <description>Auralife</description>
     <url/>
     <licenses>
         <license/>

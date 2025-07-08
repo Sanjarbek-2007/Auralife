@@ -56,4 +56,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("update User u set u.password = ?1 where u.phoneNumber = ?2")
     void updatePasswordByPhoneNumber(String password, String phoneNumber);
 
+    boolean existsByUsername(String username);
+
+    @Override
+    boolean existsById(Long aLong);
 }

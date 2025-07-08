@@ -5,5 +5,6 @@ import lombok.Builder;
 @Builder
 public record CheckUserExistaceDto(
         String phoneNumber,
-        String email
+        String email,
+        String username
 ) {}
