@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import uz.project.auralife.config.UserContext;
 import uz.project.auralife.domains.Photo;
 import uz.project.auralife.domains.User;
 import uz.project.auralife.dtos.ProfileDTO;
@@ -25,10 +26,12 @@ import java.util.List;
 public class ProfileController {
     private final AuthService authService;
     private final ProfileService profileService;
+    private final UserContext userContext;
+
 
     @GetMapping("/get")
     public ResponseEntity<ProfileDTO> getProfile() {
-        log.info("Get profile ....         .............           .......... ");
+
         return profileService.getProfile();
     }
 
@@ -60,5 +63,10 @@ public class ProfileController {
     @PostMapping("/uploadProfilePicture")
     public ResponseEntity<List<Photo>> uploadProfilePicture(@RequestParam("files") List<MultipartFile> files) throws FileUploadFailedException {
         return profileService.uploadProfilePictures(files);
+    }
+
+    @GetMapping("/get-by-id")
+    public ResponseEntity<ProfileDTO> getProfileById(@RequestParam Long id) {
+        return profileService.getUserById(id);
     }
 }

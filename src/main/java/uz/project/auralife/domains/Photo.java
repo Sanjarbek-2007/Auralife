@@ -1,5 +1,6 @@
 package uz.project.auralife.domains;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -27,4 +28,15 @@ public class Photo {
     private String name;
     private String url;
     private String source;
+
+    @Nullable
+    private String purposeName;
+
+    public Photo(String path, String name, String url, String source, @Nullable String purposeName) {
+        this.path = path;
+        this.name = name;
+        this.url = url;
+        this.source = source;
+        this.purposeName = purposeName;
+    }
 }

@@ -1,10 +1,15 @@
 spring:
   application:
     name: Jorasoft
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/auralife
+#    username: postgres
+#    password: tplink01459520
+#    driverClassName: org.postgresql.Driver
   datasource:
-    url: jdbc:postgresql://localhost:5432/auralife
-    username: postgres
-    password: tplink01459520
+    url: jdbc:postgresql://dpg-d2opci95pdvs73csd5ng-a.frankfurt-postgres.render.com:5432/haydacars
+    username: auralife
+    password: NpteDoPQByxrFITwTXni5A6KOCA78mE6
     driverClassName: org.postgresql.Driver
 
 

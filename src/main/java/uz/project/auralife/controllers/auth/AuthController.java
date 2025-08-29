@@ -13,8 +13,12 @@ import uz.project.auralife.controllers.auth.signin.SigninDto;
 import uz.project.auralife.controllers.auth.signup.ActivateRequestDTO;
 import uz.project.auralife.controllers.auth.signup.ConfirmResetPasswordDTO;
 import uz.project.auralife.controllers.auth.signup.SignupDto;
+import uz.project.auralife.controllers.dto.UserApiAuthDto;
 import uz.project.auralife.dtos.CheckUserExistaceDto;
+import uz.project.auralife.dtos.ProfileDTO;
 import uz.project.auralife.services.AuthService;
+import uz.project.auralife.controllers.auth.signin.SigninByEmailDto;
+import uz.project.auralife.services.ProfileService;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,6 +26,7 @@ import uz.project.auralife.services.AuthService;
 @Slf4j
 public class AuthController {
     private final AuthService authService;
+    private final ProfileService profileService;
 
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@RequestBody SignupDto dto){
@@ -29,6 +34,8 @@ public class AuthController {
     }
     @PostMapping("/signin")
     public ResponseEntity<?> signin(@RequestBody SigninDto dto){  return authService.signin(dto); }
+    @PostMapping("/signin-byemail")
+    public ResponseEntity<?> signinByEmail(@RequestBody SigninByEmailDto dto){  return authService.signinByEmail(dto); }
     @PostMapping ("/checkup")
     public ResponseEntity<?> checkUp(@RequestBody CheckUserExistaceDto dto){
         return ResponseEntity.ok(authService.checkExistance(dto));
@@ -36,7 +43,6 @@ public class AuthController {
     @GetMapping ("/check-up-by-id")
     public ResponseEntity<?> checkUpById(@RequestParam("userId") Long userId){
         Boolean body = authService.checkExistanceByUserId(userId);
-        log.info(body.toString()+ "AHAHAHHAHAHHAHAHAHHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         return ResponseEntity.ok(body);
     }
     @PostMapping("/code/send-again")
@@ -57,7 +63,14 @@ public class AuthController {
         return ResponseEntity.ok(authService.resetPassword(dto));
     }
 
-
+//    @PostMapping("/get-profile-by-userId")
+//    public ResponseEntity<?> getProfileByUserId(@RequestBody UserApiAuthDto dto){
+//        return ResponseEntity.ok(authService.getUserById(dto));
+//    }
+    @PostMapping("/get-match")
+    public Boolean userMatch(@RequestBody UserApiAuthDto dto){
+        return authService.userMatch(dto);
+    }
 
 
 }

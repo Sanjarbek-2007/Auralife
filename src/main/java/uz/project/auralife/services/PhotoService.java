@@ -1,5 +1,6 @@
 package uz.project.auralife.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -13,12 +14,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+@Slf4j
 @Service
 public class PhotoService {
 
     public ResponseEntity<Resource> getPhotoByPath(String photoPath) {
         Path imagePath = Paths.get(photoPath);
+
+        log.error(imagePath.getFileName().toString());
         ByteArrayResource resource;
+
         try {
             resource = new ByteArrayResource(Files.readAllBytes(imagePath));
         } catch (IOException e) {

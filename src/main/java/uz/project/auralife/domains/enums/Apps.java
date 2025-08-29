@@ -6,7 +6,9 @@ import lombok.Setter;
 @Getter
 public enum Apps {
     AURALIFE("AURALIFE"),
-    TEXTORA("TEXTORA");
+    TEXTORA("TEXTORA"),
+    HAYDA("HAYDA");
+
     private String value;
 
     Apps(String value) {

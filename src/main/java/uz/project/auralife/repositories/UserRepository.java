@@ -9,6 +9,8 @@ import uz.project.auralife.domains.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByPhoneNumber(String phoneNumber);
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.email = :email")
+    Optional<User> findByEmail(String email);
 
     boolean existsByPhoneNumber(String phoneNumber);
 
@@ -23,8 +25,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("update User u set u.password = ?1 where u.email = ?2")
     int updatePasswordByEmail(String password, String email);
-
-    Optional<User> findByEmail(String email);
 
     boolean existsByEmailAndStatusIgnoreCase(String email, String status);
 
@@ -60,4 +60,25 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Override
     boolean existsById(Long aLong);
+
+    @Query("update User u set u.firstName = :firstName where u.email = :email")
+    @Modifying
+    void updateFirstNameByEmail(String firstName, String email);
+
+    @Query("update User u set u.lastName = :lastName where u.email = :email")
+    @Modifying
+    void updateLastNameByEmail(String lastName, String email);
+
+    @Query("update User u set u.email = :email where u.email = :email1")
+    @Modifying
+    void updateEmailByEmail(String email, String email1);
+
+    @Query("update User u set u.phoneNumber = :phoneNumber where u.email = :email")
+    @Modifying
+    void updatePhoneNumberByEmail(String phoneNumber, String email);
+
+    @Transactional
+    @Modifying
+    @Query("update User u set u.status = ?1 where u.id = ?2")
+    int updateStatusById(String status, Long id);
 }

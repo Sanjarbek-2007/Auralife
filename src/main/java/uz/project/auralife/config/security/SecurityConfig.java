@@ -23,12 +23,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 @EnableWebSecurity
-@EnableMethodSecurity(
-        jsr250Enabled = true,
-        securedEnabled = true
-)
+@EnableMethodSecurity(jsr250Enabled = true, securedEnabled = true)
 @Configuration
 @OpenAPIDefinition(
         info = @Info(
@@ -48,35 +48,52 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
                 summary = "The project is fully supported by DS team"
         ),
         servers = {
-                @Server(url = "http://localhost:20007/" ,
-                        description = "Development Server"),
+                @Server(url = "http://localhost:20007/", description = "Development Server"),
+                @Server(url = "https://*.ngrok-free.app", description = "Ngrok Public Server")
         }
 )
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
-
     private final CustomUserDetailsService userDetailsService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
         security
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(registr ->
-                        registr.requestMatchers("/auth/**","/try/**"
-                                ).permitAll()
-//                                .requestMatchers("/profile/**").hasRole("USER")
+                        registr
+                                .requestMatchers("/auth/**", "/try/**", "/v3/**", "/swagger-ui/**","/api/**", "/photo/**").permitAll()
+                                .requestMatchers("/error").permitAll() // Allow error endpoint
                                 .anyRequest().authenticated()
-
-                ).sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                )
+                .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return security.build();
     }
+
     @Bean
-    public AuthenticationManager authenticationManager
-            (AuthenticationConfiguration authConfig) throws Exception {
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOriginPattern("https://*.ngrok-free.app");
+        configuration.addAllowedOrigin("http://localhost:20007");
+        configuration.addAllowedOrigin("http://localhost:11911");
+        configuration.addAllowedOrigin("http://26.42.249.167:3000");
+        configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.addAllowedOrigin("http://*.trycloudflare.com"); // Add if testing with other local ports
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
@@ -85,20 +102,15 @@ public class SecurityConfig {
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement().addList("jwt auth"))
                 .components(new Components().addSecuritySchemes("jwt auth", new SecurityScheme()
-                                                .name("jwt auth")
-                                                .type(SecurityScheme.Type.HTTP)
-                                                .bearerFormat("JWT")
-                                                .in(SecurityScheme.In.HEADER)
-                                                .scheme("bearer")));
-
+                        .name("jwt auth")
+                        .type(SecurityScheme.Type.HTTP)
+                        .bearerFormat("JWT")
+                        .in(SecurityScheme.In.HEADER)
+                        .scheme("bearer")));
     }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-
 }
-
-

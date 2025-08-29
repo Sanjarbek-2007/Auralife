@@ -25,7 +25,7 @@ public class JwtProvider {
         user.getRoles().forEach(role -> roles.add(role.getName().toUpperCase()));
         System.out.println(roles.toString());
         return Jwts.builder()
-                .subject(user.getPhoneNumber())
+                .subject(user.getEmail())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000))
                 .claim("roles", roles.toString())

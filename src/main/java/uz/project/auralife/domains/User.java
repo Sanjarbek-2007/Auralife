@@ -1,12 +1,7 @@
 package uz.project.auralife.domains;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.util.Date;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -36,10 +31,33 @@ public class User {
     private Date birthDate;
     private String gender;
     private String status;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "users_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "roles_id")
+    )
     private List<Role> roles;
     private String apps;
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     private List<Photo> profilePictures;
 
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", birthDate=" + birthDate +
+                ", gender='" + gender + '\'' +
+                ", status='" + status + '\'' +
+                ", roles=" + roles +
+                ", apps='" + apps + '\'' +
+                ", profilePictures=" + profilePictures +
+                '}';
+    }
 }

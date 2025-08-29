@@ -21,34 +21,40 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtFilter extends OncePerRequestFilter {
 
     private static final String AUTHORIZATION = "Authorization";
-
     private static final String BEARER = "Bearer ";
 
-    private RequestAttributeSecurityContextRepository repository
+    private final RequestAttributeSecurityContextRepository repository
             = new RequestAttributeSecurityContextRepository();
-
     private final JwtProvider jwtProvider;
+
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/auth/") ||
+                path.startsWith("/try/") ||
+                path.startsWith("/v3/") ||
+                path.startsWith("/swagger-ui/");
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         String header = request.getHeader(AUTHORIZATION);
         if (header == null || !header.startsWith(BEARER)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-
         String token = header.substring(BEARER.length());
 
         if (!jwtProvider.validate(token)) {
-            filterChain.doFilter(request, response);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
             return;
         }
 
         Claims claims = jwtProvider.parse(token);
-
         String email = claims.getSubject();
-
-        List<String> roles= Arrays.asList(claims.get("roles").toString().split(","));
+        List<String> roles = Arrays.asList(claims.get("roles").toString().split(","));
 
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(
@@ -59,9 +65,6 @@ public class JwtFilter extends OncePerRequestFilter {
         );
         repository.saveContext(SecurityContextHolder.getContext(), request, response);
 
-        filterChain.doFilter(request,response);
-
+        filterChain.doFilter(request, response);
     }
-
-
 }
