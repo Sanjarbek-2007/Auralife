@@ -17,6 +17,7 @@ import uz.project.auralife.exceptions.FileUploadFailedException;
 import uz.project.auralife.services.AuthService;
 import uz.project.auralife.services.ProfileService;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -54,6 +55,14 @@ public class ProfileController {
     public ResponseEntity<User> editEmail(@RequestParam("email") String email) {
         return profileService.editEmail(email);
     }
+    @PostMapping("/editUsername")
+    public ResponseEntity<User> editUsername(@RequestParam("username") String username) {
+        return profileService.editUsername(username);
+    }
+    @PostMapping("/editBirthdate")
+    public ResponseEntity<?> editBirthdate(@RequestParam("birthdate") Date birthdate) {
+        return profileService.editBirthdate(birthdate);
+    }
 
     @PostMapping("/editPhoneNumber")
     public ResponseEntity<User> editPhoneNumber(@RequestParam("phoneNumber") String phoneNumber) {
@@ -61,12 +70,23 @@ public class ProfileController {
     }
 
     @PostMapping("/uploadProfilePicture")
-    public ResponseEntity<List<Photo>> uploadProfilePicture(@RequestParam("files") List<MultipartFile> files) throws FileUploadFailedException {
+    public ResponseEntity<?> uploadProfilePicture(
+            @RequestParam("files") List<MultipartFile> files) throws FileUploadFailedException {
         return profileService.uploadProfilePictures(files);
     }
+
 
     @GetMapping("/get-by-id")
     public ResponseEntity<ProfileDTO> getProfileById(@RequestParam Long id) {
         return profileService.getUserById(id);
+    }
+
+    @GetMapping("/get-profile-by-username")
+    public ResponseEntity<?> getProfileByUsername(@RequestParam String username) {
+        return ResponseEntity.ok(profileService.getProfileByUsername(username));
+    }
+    @GetMapping("/search-profiles-by-username")
+    public ResponseEntity<?> searchProfilesByUsername(@RequestParam String username) {
+        return ResponseEntity.ok(profileService.searchProfilesByUsername(username));
     }
 }

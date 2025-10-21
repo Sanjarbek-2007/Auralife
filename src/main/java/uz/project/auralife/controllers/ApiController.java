@@ -7,22 +7,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpHeaders;
 import uz.project.auralife.config.security.JwtProvider;
+import uz.project.auralife.domains.Device;
 import uz.project.auralife.domains.User;
 import uz.project.auralife.dtos.ProfileDTO;
+import uz.project.auralife.repositories.DeviceRepository;
 import uz.project.auralife.repositories.UserRepository;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
 public class ApiController {
     private final UserRepository userRepository;
+    private final DeviceRepository deviceRepository;
     @Value("${secret.key}")
     private String secretKey;
     // Inject your JwtProvider or token validation service here
     private final JwtProvider jwtProvider;
 
-    public ApiController(UserRepository userRepository, JwtProvider jwtProvider) {
+    public ApiController(UserRepository userRepository, JwtProvider jwtProvider, DeviceRepository deviceRepository) {
         this.userRepository = userRepository;
         this.jwtProvider = jwtProvider;
+        this.deviceRepository = deviceRepository;
     }
 
     @GetMapping("/validate")
@@ -41,18 +47,19 @@ public class ApiController {
     }
 
     @GetMapping("/get-user-by-id")
-    public ResponseEntity<ProfileDTO> getProfileById(@RequestParam Long id, @RequestParam String secret) {
+    public ResponseEntity<ProfileDTO> getProfileById(@RequestBody GetUserByIdDto dto) {
 
-        if (!secretKey.equals(secret)) return ResponseEntity.badRequest().build();
+        if (!secretKey.equals(dto.secret())) return ResponseEntity.badRequest().build();
 
         try {
-            User user = userRepository.findById(id).orElse(null);
+            User user = userRepository.findById(dto.id()).orElse(null);
+            List<Device> devices = deviceRepository.findByUserId(dto.id());
             if (user == null) {
-                System.out.println("User not found for ID " + id);
+                System.out.println("User not found for ID " + dto.id());
                 return ResponseEntity.notFound().build();
             }
 
-            ProfileDTO dto = new ProfileDTO(
+            ProfileDTO profileDTO = new ProfileDTO(
                     user.getId(),
                     user.getFirstName(),
                     user.getLastName(),
@@ -64,10 +71,10 @@ public class ApiController {
                     user.getStatus(),
                     user.getRoles(),
                     user.getApps(),
-                    user.getProfilePictures());
+                    user.getProfilePictures(),devices);
 
-            System.out.println("User by id received: " + dto.email());
-            return new ResponseEntity<>(dto, HttpStatus.OK);
+            System.out.println("User by id received: " + profileDTO.email());
+            return new ResponseEntity<>(profileDTO, HttpStatus.OK);
 
         } catch (Exception e) {
             e.printStackTrace();

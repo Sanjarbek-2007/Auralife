@@ -71,6 +71,10 @@ public class AuthController {
     public Boolean userMatch(@RequestBody UserApiAuthDto dto){
         return authService.userMatch(dto);
     }
-
+    @PostMapping("/quit-device")
+    public ResponseEntity<?> quitDevice(){
+        authService.quitFromDevice();
+        return ResponseEntity.ok().build();
+    }
 
 }

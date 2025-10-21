@@ -78,19 +78,16 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("https://*.ngrok-free.app");
-        configuration.addAllowedOrigin("http://localhost:20007");
-        configuration.addAllowedOrigin("http://localhost:11911");
-        configuration.addAllowedOrigin("http://26.42.249.167:3000");
-        configuration.addAllowedOrigin("http://localhost:3000");
-        configuration.addAllowedOrigin("http://*.trycloudflare.com"); // Add if testing with other local ports
-        configuration.addAllowedMethod("*");
-        configuration.addAllowedHeader("*");
-        configuration.setAllowCredentials(true);
+        configuration.addAllowedOriginPattern("*"); // allow all origins
+        configuration.addAllowedMethod("*");        // allow all methods (GET, POST, PUT, DELETE, etc.)
+        configuration.addAllowedHeader("*");        // allow all headers
+        configuration.setAllowCredentials(true);    // allow credentials (cookies, auth headers)
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {

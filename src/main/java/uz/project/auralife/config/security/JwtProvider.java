@@ -1,21 +1,25 @@
 package uz.project.auralife.config.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.Keys;
-import java.util.Date;
-import java.util.StringJoiner;
-import javax.crypto.SecretKey;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import uz.project.auralife.domains.User;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.StringJoiner;
 
 @Component
 public class JwtProvider {
     @Value("${secret.key}")
     private String secretKey;
 
-    public String generate(User user) {
+    public String generate(User user, String iotDeviceId) {
         StringJoiner roles = new StringJoiner(",");
 
         if (user.getRoles() == null) {
@@ -23,12 +27,13 @@ public class JwtProvider {
         }
 
         user.getRoles().forEach(role -> roles.add(role.getName().toUpperCase()));
-        System.out.println(roles.toString());
+
         return Jwts.builder()
                 .subject(user.getEmail())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000))
+                .expiration(new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000)) // 30 days
                 .claim("roles", roles.toString())
+                .claim("iot_device_id", iotDeviceId) // 👈 attach the device
                 .signWith(key())
                 .compact();
     }
@@ -57,6 +62,18 @@ public class JwtProvider {
             return false;
         }
         return false;
+    }
+
+
+    public String getIotDeviceId(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith(key())   // verify with same key you signed
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        // return claim value as String
+        return claims.get("iot_device_id", String.class);
     }
 }
 

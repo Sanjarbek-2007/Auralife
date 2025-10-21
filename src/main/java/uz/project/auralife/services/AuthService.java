@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -13,28 +14,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import uz.project.auralife.config.UserContext;
 import uz.project.auralife.config.security.JwtProvider;
 import uz.project.auralife.controllers.auth.signin.SigninByEmailDto;
 import uz.project.auralife.controllers.auth.signup.ActivateRequestDTO;
 import uz.project.auralife.controllers.auth.signup.ConfirmResetPasswordDTO;
+import uz.project.auralife.controllers.auth.signup.SignUpResponseDto;
 import uz.project.auralife.controllers.dto.UserApiAuthDto;
-import uz.project.auralife.domains.ActivisationCode;
-import uz.project.auralife.domains.Photo;
-import uz.project.auralife.domains.Role;
+import uz.project.auralife.domains.*;
 import uz.project.auralife.domains.enums.Apps;
 import uz.project.auralife.domains.enums.CodeTypes;
-import uz.project.auralife.repositories.ActivisationCodeRepository;
-import uz.project.auralife.repositories.PhotoRepository;
-import uz.project.auralife.responces.ExceptionResponse;
-import uz.project.auralife.responces.JwtResponse;
-import uz.project.auralife.domains.User;
+import uz.project.auralife.repositories.*;
+import uz.project.auralife.responces.*;
 import uz.project.auralife.dtos.CheckUserExistaceDto;
 import uz.project.auralife.controllers.auth.signin.SigninDto;
 import uz.project.auralife.controllers.auth.signup.SignupDto;
-import uz.project.auralife.repositories.RoleRepository;
-import uz.project.auralife.repositories.UserRepository;
-import uz.project.auralife.responces.CheckUserExistanceResponse;
-import uz.project.auralife.responces.Response;
 
 import org.springframework.beans.factory.annotation.Value;
 
@@ -49,6 +43,9 @@ public class AuthService {
     private final ActivisationCodeRepository activationCodeRepository;
     private final EmailService emailService;
     private final PhotoRepository photoRepository;
+    private final DeviceRepository deviceRepository;
+    private final UserContext userContext;
+
     private CodeTypes codeType;
 
     @Value("${api.url}")
@@ -96,18 +93,23 @@ public class AuthService {
                 user.setProfilePictures(List.of(getOrCreateDefaultPhoto(dto.gender())));
                 rolesInit();
                 user.setRoles(Collections.singletonList(roleRepository.findByName("USER").get()));
-                userRepository.save(user);
-                String token = jwtProvider.generate(user);
+                User savedUser = userRepository.save(user);
+                Device device = getOrRegisterDevice(dto.deviceName(),dto.deviceType(), savedUser.getId(), dto.app(),true);
+                String token = jwtProvider.generate(user, device.getIotDeviceId());
                 activationSender(dto.email(), CodeTypes.ACCOUNT_ACTIVISION.getType());
-                return ResponseEntity.ok(new JwtResponse(token, "Activation code has been sent to your account."));
+                return ResponseEntity.ok(new SignUpResponseDto(200,new JwtResponse(token, "Activation code has been sent to your account."),
+                        device.getIotDeviceId(),
+                        "Successfully registred, now go to your email and confirm activation code."));
             }
         }
         return new ResponseEntity<>(new ExceptionResponse("User already exists, change phone number or email or both",
                 "", "Email or phone number is already exists",
                 "", ""), HttpStatus.CONFLICT);
     }
-@Value("${api.url}")
-private String apiUrl;
+
+    @Value("${api.url}")
+    private String apiUrl;
+
     @Transactional
     public Photo getOrCreateDefaultPhoto(String gender) {
         // Normalize gender input
@@ -133,29 +135,49 @@ private String apiUrl;
         );
         return saved;
     }
-    public ResponseEntity<JwtResponse> signin(SigninDto signinDto) {
-        Optional<User> user = userRepository.findByPhoneNumber(signinDto.phoneNumber());
-        if (user.isPresent() && passwordEncoder.matches(signinDto.password(), user.get().getPassword())) {
-            String token = jwtProvider.generate(user.orElse(null));
-            return new ResponseEntity<>(new JwtResponse(token), HttpStatus.OK);
+
+    public ResponseEntity<SignInResponse> signin(SigninDto dto) {
+        Optional<User> user = userRepository.findByPhoneNumber(dto.phoneNumber());
+        return signIn(user, dto.password(), dto.deviceName(), dto.deviceType(), dto.app() ,false);
+    }
+
+    public ResponseEntity<SignInResponse> signinByEmail(SigninByEmailDto dto) {
+        Optional<User> user = userRepository.findByEmail(dto.email());
+        return signIn(user, dto.password(), dto.deviceName(), dto.deviceType(), dto.app(), false );
+    }
+
+    private ResponseEntity<SignInResponse> signIn(Optional<User> user, String password, String deviceName, String deviceType, String app, Boolean isPrime) {
+        if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
+
+            Device device = getOrRegisterDevice(deviceName, deviceType, user.get().getId(), app, isPrime);
+            String token = jwtProvider.generate(user.get(), device.getIotDeviceId() );
+            return new ResponseEntity<>(new SignInResponse(
+                    200, "Successfuly signed in as a device "+device.getIotDeviceId(),
+                    token,device.getIotDeviceId()), HttpStatus.OK);
         }
         return null;
     }
-    public ResponseEntity<JwtResponse> signinByEmail(SigninByEmailDto signinDto) {
-        Optional<User> user = userRepository.findByEmail(signinDto.email());
-        if (user.isPresent() && passwordEncoder.matches(signinDto.password(), user.get().getPassword())) {
-            String token = jwtProvider.generate(user.get());
-            log.info("Token for user : "+user.get().getEmail()+" is :" + token);
-            return new ResponseEntity<>(new JwtResponse(token), HttpStatus.OK);
-        }
-        return null;
+    public Device getOrRegisterDevice(String deviceName, String deviceType, Long userId, String app, Boolean isPrime) {
+        Optional<Device> device = deviceRepository
+                .findByUserIdAndDeviceNameAndDeviceTypeAndPermittedApps(userId, deviceName, deviceType, app);
+
+        return device.orElseGet(() -> deviceRepository.save(new Device(
+                userId,
+                isPrime,
+                UUID.randomUUID().toString(),
+                deviceName,
+                deviceType,
+                app,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                ""
+        )));
     }
 
-    public JwtResponse refreshCode(User user) {
-        String token = jwtProvider.generate(user);
-        return new JwtResponse(token);
-    }
 
+    public void quitFromDevice(){
+        deviceRepository.deleteByIotDeviceId(userContext.getIotDeviceId());
+    }
     public Boolean checkExistanceByUserId(Long userId) {
         return userRepository.existsById(userId);
     }
@@ -298,7 +320,7 @@ private String apiUrl;
 //    }
 
     public Boolean userMatch(UserApiAuthDto dto) {
-        return passwordEncoder.matches( dto.password(),userRepository.findById(dto.userId()).get().getPassword());
+        return passwordEncoder.matches(dto.password(), userRepository.findById(dto.userId()).get().getPassword());
     }
 }
 

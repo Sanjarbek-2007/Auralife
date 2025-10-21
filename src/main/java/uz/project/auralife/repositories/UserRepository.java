@@ -1,10 +1,14 @@
 package uz.project.auralife.repositories;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+import uz.project.auralife.domains.Photo;
 import uz.project.auralife.domains.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -81,4 +85,19 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("update User u set u.status = ?1 where u.id = ?2")
     int updateStatusById(String status, Long id);
+
+    @Transactional
+    @Modifying
+    @Query("update User u set u.username = ?1 where u.email = ?2")
+    int updateUsernameByEmail(String username, String email);
+
+    @Transactional
+    @Modifying
+    @Query("update User u set u.birthDate = ?1 where u.email = ?2")
+    int updateBirthDateByEmail(Date birthDate, String email);
+
+    Optional<User> findByUsername(String username);
+
+    List<User> findByUsernameContainingIgnoreCase(String username);
+
 }

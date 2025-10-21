@@ -14,6 +14,10 @@ import uz.project.auralife.repositories.UserRepository;
 @RequiredArgsConstructor
 public class UserContext {
     private User user;
+
+
+    private String token;
+    private String iotDeviceId;
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
@@ -31,6 +35,22 @@ public class UserContext {
             }
         }
         return user;
+    }
+
+    public void setIotDeviceId(String iotDeviceId) {
+        this.iotDeviceId = iotDeviceId;
+    }
+
+    public String getIotDeviceId() {
+        return iotDeviceId;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public void setUser(User user) {

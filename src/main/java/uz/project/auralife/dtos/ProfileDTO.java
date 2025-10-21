@@ -1,5 +1,7 @@
 package uz.project.auralife.dtos;
 
+import uz.project.auralife.domains.Device;
+import uz.project.auralife.domains.Photo;
 import uz.project.auralife.domains.Role;
 
 import java.util.Date;
@@ -16,7 +18,9 @@ public record ProfileDTO(
         Date birthDate,
         String gender,
         String status,
-        List<Role>roles,
+        List<Role> roles,
         String apps,
-        List<uz.project.auralife.domains.Photo> profilePictures) {
+        List<Photo> profilePictures,
+        List<Device> devices
+) {
 }

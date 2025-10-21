@@ -6,11 +6,6 @@ spring:
 #    username: postgres
 #    password: tplink01459520
 #    driverClassName: org.postgresql.Driver
-  datasource:
-    url: jdbc:postgresql://dpg-d2opci95pdvs73csd5ng-a.frankfurt-postgres.render.com:5432/haydacars
-    username: auralife
-    password: NpteDoPQByxrFITwTXni5A6KOCA78mE6
-    driverClassName: org.postgresql.Driver
 
 
   jpa:
@@ -35,12 +30,14 @@ spring:
 secret:
   key: ApeVFjUOyTmk7XYwgcYwIEsix1mALAsQhftYQqWHE8P6kcnqbZv0Uxj9HduKEvjXzz0sVYCG0ZjSBtmxadtAiQ==
 
-
 server:
   port: 20007
+#  port: ${PORT:8080}
+
 
 
 api:
-  url: http://localhost:20007
+  url: https://localhost:20007
   photoUrl: http://localhost:20007/photo/get
   photo-save-path: src/main/resources/images/
+  photo-save-directory: D:/uploads/

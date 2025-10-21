@@ -12,9 +12,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uz.project.auralife.config.UserContext;
+import uz.project.auralife.domains.Device;
 import uz.project.auralife.domains.Photo;
 import uz.project.auralife.domains.User;
 import uz.project.auralife.dtos.ProfileDTO;
+import uz.project.auralife.dtos.PublicProfileDto;
 import uz.project.auralife.exceptions.FileUploadFailedException;
 import uz.project.auralife.repositories.PhotoRepository;
 import uz.project.auralife.repositories.RoleRepository;
@@ -25,11 +27,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class   ProfileService {
+public class ProfileService {
 
     private final PhotoRepository photoRepository;
     private final PasswordEncoder passwordEncoder;
@@ -37,17 +42,20 @@ public class   ProfileService {
     private final PhotoService photoService;
     private final UserRepository userRepository;
     private final UserContext userContext;
+    private final AuthService authService;
 
     @Value("${api.photo-save-path}")
-    private  String path = new String();
-
-
+    private String path = new String();
+    @Value("${api.photo-save-directory}")
+    private String directory = new String();
+    @Value("${api.url}")
+    private String apiUrl;
 
     @Transactional
     public ResponseEntity<User> editFullname(String firstName, String lastName) {
         String email = userContext.getUser().getEmail();
-        userRepository.updateFirstNameByEmail(firstName,email );
-        userRepository.updateLastNameByEmail(lastName,email);
+        userRepository.updateFirstNameByEmail(firstName, email);
+        userRepository.updateLastNameByEmail(lastName, email);
         return ResponseEntity.ok(userRepository.findByEmail(email).get());
     }
 
@@ -55,11 +63,12 @@ public class   ProfileService {
         String email = userContext.getUser().getEmail();
         if (!email.isBlank()) {
             String encodedPassword = passwordEncoder.encode(password);
-            userRepository.updatePasswordByEmail( encodedPassword,email);
+            userRepository.updatePasswordByEmail(encodedPassword, email);
             return new ResponseEntity<>("Password edited successfully", HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
+
     @Transactional
     public ResponseEntity<User> editEmail(String email) {
         String email1 = userContext.getUser().getEmail();
@@ -70,7 +79,14 @@ public class   ProfileService {
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
-
+    public ResponseEntity<User> editUsername(String username) {
+        String email = userContext.getUser().getEmail();
+        if (!email.isBlank()) {
+            userRepository.updateUsernameByEmail(username, email);
+            User updatedUser = userRepository.findByPhoneNumber(email).orElse(null);
+        }
+        return null;
+    }
     @Transactional
     public ResponseEntity<User> editPhoneNumber(String phoneNumber) {
         String email = userContext.getUser().getEmail();
@@ -83,7 +99,7 @@ public class   ProfileService {
     }
 
     public ResponseEntity<Photo> getProfilePicture() {
-        User user= userContext.getUser();
+        User user = userContext.getUser();
         if (!user.getEmail().isBlank()) {
             List<Photo> profilePhotos = user.getProfilePictures();
             if (!profilePhotos.isEmpty()) {
@@ -94,69 +110,114 @@ public class   ProfileService {
         }
         return new ResponseEntity<>(HttpStatus.CONFLICT);
     }
+
     public ResponseEntity<ProfileDTO> getProfile() {
 
         User user = userContext.getUser();
-        log.info("Get profile for email {}",user.getEmail());
+
+        log.info("Get profile for email {}", user.getEmail());
         if (!user.getEmail().isBlank()) {
             if (user.getStatus().equals("active")) {
-            ProfileDTO dto = new ProfileDTO(
-                    user.getId(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getUsername(),
-                    user.getEmail(),
-                    user.getPhoneNumber(),
-                    user.getBirthDate(),
-                    user.getGender(),
-                    user.getStatus(),
-                    user.getRoles(),
-                    user.getApps(),
-                    user.getProfilePictures());
-            return ResponseEntity.ok(dto);
+                ProfileDTO dto = new ProfileDTO(
+                        user.getId(),
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getUsername(),
+                        user.getEmail(),
+                        user.getPhoneNumber(),
+                        user.getBirthDate(),
+                        user.getGender(),
+                        user.getStatus(),
+                        user.getRoles(),
+                        user.getApps(),
+                        user.getProfilePictures(),
+                        null
+                        );
+                return ResponseEntity.ok(dto);
             }
         }
         return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
     }
 
-    public ResponseEntity<List<Photo>> uploadProfilePictures(List<MultipartFile> files) throws FileUploadFailedException {
+    public ResponseEntity<?> uploadProfilePictures(List<MultipartFile> files)
+            throws FileUploadFailedException {
 
-        User user  = userContext.getUser();
-            List<Photo> photos = new ArrayList<>();
-            for (MultipartFile file : files) {
-                if (!file.isEmpty()) {
-                    try {
-                        byte[] bytes = file.getBytes();
-                        String fileName = "Document-" + user.getId() + "-" + file.getOriginalFilename();
-                        String filePath = path + fileName;
+        User user = userContext.getUser();
 
+        // Start from user's current photos
+        List<Photo> currentPhotos = new ArrayList<>(user.getProfilePictures());
 
-                        // Ensure the directory exists
-                        File dir = new File(path);
-                        if (!dir.exists()) {
-                            dir.mkdirs();
-                        }
+        // If user has only one default photo, remove it from the list (don’t delete from DB)
+        if (currentPhotos.size() == 1 && isDefaultPhoto(currentPhotos.get(0), user.getGender())) {
+            currentPhotos.clear();
+        }
 
-                        BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(new File(filePath)));
-                        stream.write(bytes);
-                        stream.close();
+        List<Photo> newPhotos = new ArrayList<>();
 
+        for (MultipartFile file : files) {
+            if (!file.isEmpty()) {
+                try {
+                    byte[] bytes = file.getBytes();
+                    String fileName = "Profile-picture-" + user.getId() + "-" + file.getOriginalFilename();
+                    String filePath = directory + fileName;
 
-                        Photo photo = photoRepository.save(Photo.builder().name(fileName).path(filePath).build());
-                        photos.add(photo);
-
-                        log.info("Photo with id: "+photo.getId()+" is attenpting to be added to the database");
-                        photoRepository.addPhotoByPhotoIdAndUserId(user.getId(), photo.getId());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        throw new FileUploadFailedException("File upload failed for file: " + file.getOriginalFilename());
+                    // Ensure the directory exists
+                    File dir = new File(directory);
+                    if (!dir.exists()) {
+                        dir.mkdirs();
                     }
+
+                    try (BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(filePath))) {
+                        stream.write(bytes);
+                    }
+
+                    // Save photo entity with extra info
+                    Photo saved = photoRepository.save(
+                            new Photo(
+                                    filePath,
+                                    user.getGender().toLowerCase(),
+                                    apiUrl + "/photo/get?photoPath=" + filePath,
+                                    "Auralife",
+                                    "profile"
+                            )
+                    );
+
+                    log.info("Photo with id: {} is added to the database", saved.getId());
+                    newPhotos.add(saved);
+
+                } catch (IOException e) {
+                    return ResponseEntity
+                            .status(HttpStatus.BAD_REQUEST)
+                            .body(new FileUploadFailedException("File upload failed for file: " + file.getOriginalFilename()));
                 }
             }
-            return ResponseEntity.ok(photos);
+        }
 
+        // Update user’s profile pictures
+        if (!newPhotos.isEmpty()) {
+            currentPhotos.addAll(newPhotos);
+            user.setProfilePictures(currentPhotos);
+        }
+
+        // If no photos left after update, reset to default
+        if (user.getProfilePictures().isEmpty()) {
+            Photo defaultPhoto = authService.getOrCreateDefaultPhoto(user.getGender());
+            user.setProfilePictures(List.of(defaultPhoto));
+        }
+
+        // Persist relationship changes in join table
+        userRepository.save(user);
+
+        return ResponseEntity.ok(user.getProfilePictures());
     }
-    public ResponseEntity<ProfileDTO> getUserById(Long id){
+
+    private boolean isDefaultPhoto(Photo photo, String gender) {
+        Photo defaultPhoto = authService.getOrCreateDefaultPhoto(gender);
+        return defaultPhoto.getId().equals(photo.getId());
+    }
+
+
+    public ResponseEntity<ProfileDTO> getUserById(Long id) {
 
         User user = userRepository.findById(id).get();
         ProfileDTO dto = new ProfileDTO(
@@ -171,14 +232,18 @@ public class   ProfileService {
                 user.getStatus(),
                 user.getRoles(),
                 user.getApps(),
-                user.getProfilePictures());
-        return new ResponseEntity<>(dto,HttpStatus.OK );
+                user.getProfilePictures(),
+                null
+                );
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
+
     public User getUserByToken(String token) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email).get();
     }
-public List<ProfileDTO> mapToProfileDTO(List<User> profiles) {
+
+    public List<ProfileDTO> mapToProfileDTO(List<User> profiles) {
         List<ProfileDTO> profileDTOs = new ArrayList<>();
         for (User user : profiles) {
             ProfileDTO dto = new ProfileDTO(
@@ -193,22 +258,26 @@ public List<ProfileDTO> mapToProfileDTO(List<User> profiles) {
                     user.getStatus(),
                     user.getRoles(),
                     user.getApps(),
-                    user.getProfilePictures());
+                    user.getProfilePictures(),
+                    null
+
+                    );
             profileDTOs.add(dto);
         }
         return profileDTOs;
-}
+    }
+
     public ResponseEntity<List<ProfileDTO>> getAllUsers() {
-        return new ResponseEntity<>(mapToProfileDTO(userRepository.findAll()),HttpStatus.OK);
+        return new ResponseEntity<>(mapToProfileDTO(userRepository.findAll()), HttpStatus.OK);
     }
 
     public ResponseEntity<?> deactivateUser(Long userId) {
-        userRepository.updateStatusById("non-active",userId);
+        userRepository.updateStatusById("non-active", userId);
         return ResponseEntity.ok().build();
     }
 
     public ResponseEntity<?> activateUser(Long userId) {
-        userRepository.updateStatusById("active",userId);
+        userRepository.updateStatusById("active", userId);
         return ResponseEntity.ok().build();
     }
 
@@ -216,4 +285,39 @@ public List<ProfileDTO> mapToProfileDTO(List<User> profiles) {
         userRepository.deleteById(userId);
         return ResponseEntity.ok().build();
     }
+
+
+    public ResponseEntity<?> editBirthdate(Date birthdate) {
+
+        userRepository.updateBirthDateByEmail(birthdate, userContext.getUser().getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    public PublicProfileDto getProfileByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .map(user -> new PublicProfileDto(
+                        user.getId(),
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getUsername(),
+                        user.getGender(),
+                        user.getProfilePictures()
+                ))
+                .orElse(null); // or throw exception if not found
+    }
+
+    public List<PublicProfileDto> searchProfilesByUsername(String username) {
+        return userRepository.findByUsernameContainingIgnoreCase(username)
+                .stream()
+                .map(user -> new PublicProfileDto(
+                        user.getId(),
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getUsername(),
+                        user.getGender(),
+                        user.getProfilePictures()
+                ))
+                .toList();
+    }
+
 }

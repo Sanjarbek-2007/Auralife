@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import uz.project.auralife.config.UserContext;
 
 @Component
 @RequiredArgsConstructor
@@ -26,6 +27,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final RequestAttributeSecurityContextRepository repository
             = new RequestAttributeSecurityContextRepository();
     private final JwtProvider jwtProvider;
+    private final UserContext userContext;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -51,7 +53,8 @@ public class JwtFilter extends OncePerRequestFilter {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
             return;
         }
-
+        userContext.setToken(token);
+        userContext.setIotDeviceId(jwtProvider.getIotDeviceId(token));
         Claims claims = jwtProvider.parse(token);
         String email = claims.getSubject();
         List<String> roles = Arrays.asList(claims.get("roles").toString().split(","));
