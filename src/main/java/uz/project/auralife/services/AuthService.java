@@ -230,7 +230,7 @@ public class AuthService {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Device device = getOrRegisterDevice(deviceName, deviceType, userId, targetAppId, false, request);
         String token = jwtProvider.generate(user, device.getIotDeviceId(), targetAppId);
-        connectedAppService.registerApp(userId, Apps.valueOf(targetAppId.toUpperCase()));
+        connectedAppService.registerApp(userId, Apps.valueOf(targetAppId.toUpperCase().replace("-", "_")));
         return ResponseEntity.ok(new SignInResponse(200, "SSO token generated", token, device.getIotDeviceId(),
                 user.getFirstName(), user.getLastName(), user.getProfilePhotoFileId()));
     }

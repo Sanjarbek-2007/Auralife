@@ -7,7 +7,11 @@ import lombok.Setter;
 public enum Apps {
     AURALIFE("AURALIFE"),
     TEXTORA("TEXTORA"),
-    HAYDA("HAYDA");
+    HAYDA("HAYDA"),
+    TABIB_CLINIX("TABIB_CLINIX"),
+    TABIB_BUSINESS("TABIB_BUSINESS"),
+    TABIB("TABIB"),
+    CLINIX("CLINIX");
 
     private String value;
 
