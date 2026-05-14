@@ -11,7 +11,9 @@ public enum Apps {
     TABIB_CLINIX("TABIB_CLINIX"),
     TABIB_BUSINESS("TABIB_BUSINESS"),
     TABIB("TABIB"),
-    CLINIX("CLINIX");
+    CLINIX("CLINIX"),
+    CLINIX_PATIENTS("CLINIX_PATIENTS"),
+    CLINIX_STAFF("CLINIX_STAFF");
 
     private String value;
 
