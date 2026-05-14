@@ -110,7 +110,9 @@
                 `;
                 
                 item.addEventListener('click', async () => {
-                    const appId = "[[${app_id}]]" || sessionStorage.getItem('app_id') || 'AURALIFE';
+                    let springAppId = "[[${app_id != null ? app_id : ''}]]";
+                    if (springAppId === "null") springAppId = "";
+                    const appId = springAppId || sessionStorage.getItem('app_id') || 'AURALIFE';
                     const token = acc.token;
                     
                     if (hasToken) {
@@ -135,8 +137,9 @@
                                 localStorage.setItem('savedAccounts', JSON.stringify(accounts));
                                 
                                 // The backend now returns the correct redirectUri based on appId
-                                const finalRedirect = data.redirectUri || "[[${session.redirect_uri}]]" || sessionStorage.getItem('redirect_uri');
-                                if (finalRedirect) {
+                                const springRedirect = "[[${session.redirect_uri != null ? session.redirect_uri : ''}]]";
+                                const finalRedirect = data.redirectUri || springRedirect || sessionStorage.getItem('redirect_uri');
+                                if (finalRedirect && finalRedirect !== "null") {
                                     window.location.href = finalRedirect + (finalRedirect.includes('?') ? '&' : '?') + "token=" + data.accessToken;
                                     return;
                                 }

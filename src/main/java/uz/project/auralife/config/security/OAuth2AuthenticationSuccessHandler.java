@@ -84,7 +84,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         if (appIdStr != null && !appIdStr.isEmpty()) {
             try {
-                Apps requestedApp = Apps.valueOf(appIdStr);
+                Apps requestedApp = Apps.valueOf(appIdStr.toUpperCase().replace("-", "_"));
                 if (requestedApp.getRedirectUri() != null && !requestedApp.getRedirectUri().isEmpty()) {
                     targetUrl = requestedApp.getRedirectUri();
                 }
