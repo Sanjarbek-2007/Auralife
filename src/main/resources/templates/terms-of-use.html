@@ -3,58 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="#{terms.title}">Auralife - Terms of Use</title>
+    <title th:text="#{terms.title}">Auralife SSO - Terms of Use</title>
     <link rel="icon" type="image/svg+xml" th:href="@{/assets/auralife-logo-svg.svg}" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <style>
-        .terms-container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 40px;
-            background: var(--surface-container);
-            border-radius: 24px;
-            border: 1px border var(--outline-variant);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
-        .terms-content {
-            line-height: 1.6;
-            color: var(--on-surface);
-            margin-top: 20px;
-        }
-        .back-link {
-            display: inline-block;
-            margin-top: 20px;
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-    </style>
 </head>
 <body>
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
 
-    <div class="terms-container">
-        <div class="auth-header" style="text-align: left; margin-bottom: 20px;">
-            <img th:src="@{/assets/auralife-logo-light-theme.png}" alt="Auralife Logo" class="auth-logo" style="margin-left: 0;">
+    <div class="top-controls">
+        <div class="custom-dropdown" id="lang-dropdown">
+            <div class="dropdown-selected" onclick="toggleDropdown()">
+                <span id="current-lang-icon">🌐</span>
+                <span id="current-lang-text">English</span>
+            </div>
+            <div class="dropdown-options" id="lang-options">
+                <div class="dropdown-option" onclick="changeLanguage('uz')">
+                    <span class="flag">🇺🇿</span> <span th:text="#{lang.uz}">O'zbek</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('en')">
+                    <span class="flag">🇺🇸</span> English
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ru')">
+                    <span class="flag">🇷🇺</span> <span th:text="#{lang.ru}">Русский</span>
+                </div>
+            </div>
+        </div>
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="theme-toggle">
+                <input type="checkbox" id="theme-toggle" />
+                <div class="slider round"></div>
+            </label>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <img id="auth-logo" th:src="@{/assets/auralife-logo-light-theme.png}" alt="Auralife Logo" class="auth-logo">
             <h1 th:text="#{terms.header}">Terms of Use</h1>
+            <p th:text="#{terms.content}">Use of Auralife SSO services means you agree to the following basic terms to protect yourself and others.</p>
         </div>
         
-        <div class="terms-content">
-            <p th:text="#{terms.content}">Use of Auralife SSO services means you agree to the following basic terms to protect yourself and others.</p>
-            <p style="margin-top: 20px;">
-                <strong>1. Data Usage:</strong> We collect your basic information to personalize your experience and secure your account across the ecosystem.<br><br>
-                <strong>2. Privacy & Security:</strong> Your data is protected with industry-standard encryption. However, you must log out when using public devices to prevent unauthorized access.<br><br>
-                <strong>3. Responsibilities:</strong> You are strictly responsible for maintaining the confidentiality of your account credentials. Do not share your passwords or OTPs with anyone, not even Auralife staff.<br><br>
-                <strong>4. Connected Applications:</strong> Auralife only shares your necessary profile information with the authorized applications you choose to sign in to.
+        <div style="font-size: 0.95rem; line-height: 1.6; color: var(--on-surface); text-align: left; background: var(--surface); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <p style="margin-bottom: 12px;">
+                <strong>1. Data Usage:</strong> We collect your basic information to personalize your experience and secure your account.
+            </p>
+            <p style="margin-bottom: 12px;">
+                <strong>2. Privacy & Security:</strong> Your data is protected with encryption. You must log out on public devices to prevent unauthorized access.
+            </p>
+            <p style="margin-bottom: 12px;">
+                <strong>3. Responsibilities:</strong> You are strictly responsible for maintaining your account credentials. Never share passwords or OTPs.
+            </p>
+            <p>
+                <strong>4. Connected Applications:</strong> Auralife only shares your necessary profile information with authorized applications you sign in to.
             </p>
         </div>
 
-        <a href="javascript:history.back()" class="back-link">← Back</a>
+        <button onclick="history.back()" class="btn-primary" style="margin-top: 10px;">Accept & Go Back</button>
     </div>
+
+    <script th:src="@{/js/auth.js}"></script>
 </body>
 </html>
