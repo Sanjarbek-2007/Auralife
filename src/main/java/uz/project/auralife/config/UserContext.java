@@ -41,6 +41,10 @@ public class UserContext {
         this.iotDeviceId = iotDeviceId;
     }
 
+    public Long getUserId() {
+        return getUser().getId();
+    }
+
     public String getIotDeviceId() {
         return iotDeviceId;
     }

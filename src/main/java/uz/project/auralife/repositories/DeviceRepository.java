@@ -14,6 +14,8 @@ public interface DeviceRepository extends JpaRepository<Device, Long> {
             String permittedApps
     );
 
+    Optional<Device> findByIotDeviceId(String iotDeviceId);
+
 
     long deleteByIotDeviceId(String iotDeviceId);
 

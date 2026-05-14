@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package auth;
+
+option java_multiple_files = true;
+option java_package = "uz.project.auralife.grpc.proto";
+option java_outer_classname = "AuthProto";
+
+service AuthService {
+    rpc ValidateToken (TokenRequest) returns (TokenResponse) {}
+    rpc GetUser (UserRequest) returns (UserResponse) {}
+}
+
+message TokenRequest {
+    string token = 1;
+}
+
+message TokenResponse {
+    bool is_valid = 1;
+    string username = 2;
+    string error_message = 3;
+}
+
+message UserRequest {
+    string token = 1;
+}
+
+message UserResponse {
+    uint64 id = 1;
+    string username = 2;
+    string email = 3;
+    string first_name = 4;
+    string last_name = 5;
+    string phone_number = 6;
+    repeated string roles = 7;
+    DeviceResponse device = 8;
+}
+
+message DeviceResponse {
+    string device_name = 1;
+    string device_type = 2;
+    string location = 3;
+    string browser = 4;
+    string ip_address = 5;
+}

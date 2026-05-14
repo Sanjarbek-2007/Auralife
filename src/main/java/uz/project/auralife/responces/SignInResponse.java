@@ -13,11 +13,22 @@ public class SignInResponse extends Response{
     private String accessToken;
     private LocalDateTime dateTime=LocalDateTime.now();
     private String iotDeviceId;
+    private String firstName;
+    private String lastName;
+    private String profilePhotoFileId;
 
     public SignInResponse(int status, String message, String accessToken, String iotDeviceId) {
         super(status, message);
         this.accessToken = accessToken;
         this.iotDeviceId = iotDeviceId;
+    }
 
+    public SignInResponse(int status, String message, String accessToken, String iotDeviceId, String firstName, String lastName, String profilePhotoFileId) {
+        super(status, message);
+        this.accessToken = accessToken;
+        this.iotDeviceId = iotDeviceId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.profilePhotoFileId = profilePhotoFileId;
     }
 }

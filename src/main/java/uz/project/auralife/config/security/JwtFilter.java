@@ -16,6 +16,8 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import uz.project.auralife.config.UserContext;
+import uz.project.auralife.repositories.UserRepository;
+import uz.project.auralife.domains.User;
 
 @Component
 @RequiredArgsConstructor
@@ -28,10 +30,14 @@ public class JwtFilter extends OncePerRequestFilter {
             = new RequestAttributeSecurityContextRepository();
     private final JwtProvider jwtProvider;
     private final UserContext userContext;
+    private final UserRepository userRepository;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
+        if (path.equals("/auth/sso/exchange") || path.equals("/auth/quit-device")) {
+            return false; // MUST be filtered securely
+        }
         return path.startsWith("/auth/") ||
                 path.startsWith("/try/") ||
                 path.startsWith("/v3/") ||
@@ -57,6 +63,16 @@ public class JwtFilter extends OncePerRequestFilter {
         userContext.setIotDeviceId(jwtProvider.getIotDeviceId(token));
         Claims claims = jwtProvider.parse(token);
         String email = claims.getSubject();
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user != null) {
+            if (Boolean.TRUE.equals(user.getIsBanned())) {
+                response.sendError(HttpServletResponse.SC_FORBIDDEN, "Your account has been banned.");
+                return;
+            }
+            userRepository.recordActivityByEmail(email);
+        }
+
         List<String> roles = Arrays.asList(claims.get("roles").toString().split(","));
 
         SecurityContextHolder.getContext().setAuthentication(

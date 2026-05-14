@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auralife SSO - Choose Account</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/assets/auralife-logo-svg.svg}" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+
+    <div class="top-controls">
+        <div class="custom-dropdown" id="lang-dropdown">
+            <div class="dropdown-selected" onclick="toggleDropdown()">
+                <span id="current-lang-icon">🌐</span>
+                <span id="current-lang-text">English</span>
+            </div>
+            <div class="dropdown-options" id="lang-options">
+                <div class="dropdown-option" onclick="changeLanguage('uz')">
+                    <span class="flag">🇺🇿</span> <span th:text="#{lang.uz}">O'zbek</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('en')">
+                    <span class="flag">🇺🇸</span> English
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ru')">
+                    <span class="flag">🇷🇺</span> <span th:text="#{lang.ru}">Русский</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('es')">
+                    <span class="flag">🇪🇸</span> <span th:text="#{lang.es}">Español</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('zh')">
+                    <span class="flag">🇨🇳</span> <span th:text="#{lang.zh}">中文</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ja')">
+                    <span class="flag">🇯🇵</span> <span th:text="#{lang.ja}">日本語</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ar')">
+                    <span class="flag">🇸🇦</span> <span th:text="#{lang.ar}">العربية</span>
+                </div>
+            </div>
+        </div>
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="theme-toggle">
+                <input type="checkbox" id="theme-toggle" />
+                <div class="slider round"></div>
+            </label>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <img id="auth-logo" th:src="@{/assets/auralife-logo-light-theme.png}" alt="Auralife Logo" class="auth-logo">
+            <h1 th:text="#{chooser.header}">Choose an account</h1>
+            <p th:text="#{chooser.subheader}">to continue to Auralife</p>
+        </div>
+
+        <div class="account-list" id="account-list-container">
+            <!-- Populated via Javascript -->
+        </div>
+
+        <div class="auth-footer" style="flex-direction: column; gap: 10px;">
+            <a href="javascript:void(0)" onclick="skipChooserAndGo('/auth/page/login')" style="display: flex; align-items: center; justify-content: center; width: 100%;">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 8px;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <span th:text="#{chooser.add}">Use another account</span>
+            </a>
+            
+            <a href="javascript:void(0)" onclick="skipChooserAndGo('/auth/page/signup')" style="font-size: 0.9rem; color: var(--text-primary); text-decoration: none; opacity: 0.8;" th:text="#{chooser.signup}">
+                Create new account
+            </a>
+        </div>
+    </div>
+
+    <script th:src="@{/js/auth.js}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('account-list-container');
+            let accounts = JSON.parse(localStorage.getItem('savedAccounts')) || [];
+            
+            if (accounts.length === 0) {
+                // Redirect to login if no accounts saved
+                window.location.href = '/auth/page/login';
+                return;
+            }
+
+            accounts.forEach(acc => {
+                const initial = acc.name ? acc.name.charAt(0).toUpperCase() : '?';
+                const hasToken = !!acc.token;
+                
+                const item = document.createElement('div');
+                item.className = 'account-item';
+                
+                const avatar = acc.photoId 
+                    ? `<img src="http://files.media.auralife.uz/files/${acc.photoId}" class="account-avatar-img" onerror="this.outerHTML='<div class=\'account-avatar-initial\'>${initial}</div>'">`
+                    : `<div class="account-avatar-initial">${initial}</div>`;
+
+                item.innerHTML = `
+                    <div class="account-avatar">${avatar}</div>
+                    <div class="account-info">
+                        <div class="account-name">${acc.name}</div>
+                        <div class="account-email">${acc.email}</div>
+                        ${(!acc.active && hasToken) ? `<div class="account-status" style="font-size: 0.8rem; color: #ff9b42; margin-top: 4px;">Signed out</div>` : ''}
+                    </div>
+                `;
+                
+                item.addEventListener('click', async () => {
+                    const redirectUri = sessionStorage.getItem('redirect_uri');
+                    const appId = sessionStorage.getItem('app_id') || 'AURALIFE';
+                    const token = acc.token;
+                    
+                    if (hasToken && redirectUri) {
+                        try {
+                            const res = await fetch('/auth/sso/exchange', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + token
+                                },
+                                body: JSON.stringify({
+                                    appId: appId,
+                                    deviceName: typeof getDeviceName === 'function' ? getDeviceName() : "Web Browser",
+                                    deviceType: "WEB"
+                                })
+                            });
+                            
+                            if (res.ok) {
+                                const data = await res.json();
+                                // Successful exchange, mark active
+                                acc.active = true;
+                                localStorage.setItem('savedAccounts', JSON.stringify(accounts));
+                                window.location.href = redirectUri + "?token=" + data.accessToken;
+                                return;
+                            }
+                        } catch (e) {
+                            console.error("SSO attempt failed", e);
+                        }
+                    }
+                    
+                    // Fallback to login if token missing or exchange failed
+                    window.location.href = `/auth/page/login?username=${encodeURIComponent(acc.email)}`;
+                });
+                
+                container.appendChild(item);
+            });
+        });
+    </script>
+</body>
+</html>

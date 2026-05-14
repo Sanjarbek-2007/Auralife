@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Auralife - Logging Out...</title>
+    <script th:src="@{/js/auth.js}"></script>
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            const email = /*[[${email}]]*/ null;
+            const redirectUri = /*[[${redirect_uri}]]*/ null;
+            
+            if (email && window.signOutAccount) {
+                window.signOutAccount(email);
+            }
+            
+            // Redirect back to the caller or login
+            if (redirectUri) {
+                window.location.href = redirectUri;
+            } else {
+                window.location.href = '/auth/page/account-chooser';
+            }
+        });
+    </script>
+</head>
+<body>
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif;">
+        <p>Logging out...</p>
+    </div>
+</body>
+</html>

@@ -69,5 +69,47 @@ public class EmailService {
                 """.formatted(username, activationLink, activationLink, activationLink);
     }
 
-}
+    public String sendAuthCodeEmail(String to, String code, String type) throws MessagingException {
+        String emailContent = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Your Verification Code</title>
+                    <style>
+                        body { font-family: 'Inter', Arial, sans-serif; background-color: #f4f6f8; margin: 0; padding: 40px 20px; }
+                        .container { max-width: 500px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; 
+                                     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); text-align: center; }
+                        h2 { color: #1a1a1a; margin-top: 0; }
+                        p { color: #555; }
+                        .code-box { display: inline-block; padding: 16px 32px; font-size: 28px; font-weight: bold; letter-spacing: 4px;
+                                    color: #007bff; background: #f0f7ff; border: 1px dashed #007bff; border-radius: 8px; margin: 24px 0; }
+                        .footer { margin-top: 30px; font-size: 12px; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h2>Auralife Verification</h2>
+                        <p>We received a request to verify your account.</p>
+                        <p>Please enter the following 6-digit code:</p>
+                        <div class="code-box">%s</div>
+                        <p>This code will expire in 5 minutes.</p>
+                        <p class="footer">If you did not request this code, please ignore this email.</p>
+                    </div>
+                </body>
+                </html>
+                """.formatted(code);
 
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setTo(to);
+        helper.setSubject("Auralife " + type + " Code");
+        helper.setText(emailContent, true);
+
+        mailSender.send(message);
+
+        return "Successfully sent auth code to email : " + to;
+    }
+
+}

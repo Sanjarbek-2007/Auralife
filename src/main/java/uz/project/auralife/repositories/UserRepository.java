@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
-import uz.project.auralife.domains.Photo;
+
 import uz.project.auralife.domains.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -51,8 +51,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     void updatePhoneNumberByPhoneNumber(String currentPhoneNumber, String newPhoneNumber);
 
     @Modifying
-    @Query("UPDATE User u SET u.profilePictures = :profilePicture WHERE u.phoneNumber = :phoneNumber")
-    void updateProfilePictureByPhoneNumber(String phoneNumber, String profilePicture);
+    @Query("UPDATE User u SET u.profilePhotoFileId = :profilePhotoFileId WHERE u.phoneNumber = :phoneNumber")
+    void updateProfilePhotoFileIdByPhoneNumber(String phoneNumber, String profilePhotoFileId);
 
 
     @Transactional
@@ -100,4 +100,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByUsernameContainingIgnoreCase(String username);
 
+    @Transactional
+    @Modifying
+    @Query("update User u set u.lastActiveTime = current_timestamp, u.activityCount = coalesce(u.activityCount, 0) + 1 where u.email = :email")
+    void recordActivityByEmail(@Param("email") String email);
+
+    @Transactional
+    @Modifying
+    @Query("update User u set u.isBanned = :isBanned where u.id = :id")
+    void updateBanStatusById(@Param("id") Long id, @Param("isBanned") Boolean isBanned);
 }

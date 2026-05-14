@@ -10,12 +10,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import uz.project.auralife.config.UserContext;
-import uz.project.auralife.domains.Photo;
 import uz.project.auralife.domains.User;
 import uz.project.auralife.dtos.ProfileDTO;
+import uz.project.auralife.dtos.UpdateProfileRequest;
 import uz.project.auralife.exceptions.FileUploadFailedException;
 import uz.project.auralife.services.AuthService;
 import uz.project.auralife.services.ProfileService;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Date;
 import java.util.List;
@@ -36,10 +37,6 @@ public class ProfileController {
         return profileService.getProfile();
     }
 
-    @GetMapping("/profilePhoto")
-    public ResponseEntity<Photo> getProfilePhoto() {
-        return profileService.getProfilePicture();
-    }
 
     @PostMapping("/editFullname")
     public ResponseEntity<User> editFullname(@RequestParam("firstName") String firstName, @RequestParam("lastName") String lastName) {
@@ -71,10 +68,9 @@ public class ProfileController {
 
     @PostMapping("/uploadProfilePicture")
     public ResponseEntity<?> uploadProfilePicture(
-            @RequestParam("files") List<MultipartFile> files) throws FileUploadFailedException {
-        return profileService.uploadProfilePictures(files);
+            @RequestParam("file") MultipartFile file) throws FileUploadFailedException {
+        return profileService.uploadProfilePicture(file);
     }
-
 
     @GetMapping("/get-by-id")
     public ResponseEntity<ProfileDTO> getProfileById(@RequestParam Long id) {

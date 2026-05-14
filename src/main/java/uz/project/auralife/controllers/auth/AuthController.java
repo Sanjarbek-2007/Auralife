@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import uz.project.auralife.controllers.auth.signin.GoogleTrustDto;
 import uz.project.auralife.controllers.auth.signin.SigninDto;
 import uz.project.auralife.controllers.auth.signup.ActivateRequestDTO;
 import uz.project.auralife.controllers.auth.signup.ConfirmResetPasswordDTO;
@@ -29,13 +30,15 @@ public class AuthController {
     private final ProfileService profileService;
 
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@RequestBody SignupDto dto){
-        return authService.signup(dto);
+    public ResponseEntity<?> signup(@RequestBody SignupDto dto, jakarta.servlet.http.HttpServletRequest request){
+        return authService.signup(dto, request);
     }
     @PostMapping("/signin")
-    public ResponseEntity<?> signin(@RequestBody SigninDto dto){  return authService.signin(dto); }
+    public ResponseEntity<?> signin(@RequestBody SigninDto dto, jakarta.servlet.http.HttpServletRequest request){  return authService.signin(dto, request); }
     @PostMapping("/signin-byemail")
-    public ResponseEntity<?> signinByEmail(@RequestBody SigninByEmailDto dto){  return authService.signinByEmail(dto); }
+    public ResponseEntity<?> signinByEmail(@RequestBody SigninByEmailDto dto, jakarta.servlet.http.HttpServletRequest request){  return authService.signinByEmail(dto, request); }
+    @PostMapping("/google-trusted")
+    public ResponseEntity<?> googleTrusted(@RequestBody GoogleTrustDto dto, jakarta.servlet.http.HttpServletRequest request){ return authService.googleTrustedLogin(dto, request); }
     @PostMapping ("/checkup")
     public ResponseEntity<?> checkUp(@RequestBody CheckUserExistaceDto dto){
         return ResponseEntity.ok(authService.checkExistance(dto));
@@ -71,6 +74,13 @@ public class AuthController {
     public Boolean userMatch(@RequestBody UserApiAuthDto dto){
         return authService.userMatch(dto);
     }
+    @PostMapping("/sso/exchange")
+    public ResponseEntity<?> exchangeSsoToken(@RequestBody SsoExchangeDto dto, jakarta.servlet.http.HttpServletRequest request) {
+        return authService.exchangeSsoToken(dto.appId(), dto.deviceName(), dto.deviceType(), request);
+    }
+
+    public record SsoExchangeDto(String appId, String deviceName, String deviceType) {}
+
     @PostMapping("/quit-device")
     public ResponseEntity<?> quitDevice(){
         authService.quitFromDevice();

@@ -39,8 +39,19 @@ public class User {
     )
     private List<Role> roles;
     private String apps;
-    @ManyToMany(fetch = FetchType.LAZY)
-    private List<Photo> profilePictures;
+    // Removed legacy profilePictures list
+    private String jobTitle;
+    private String officeLocation;
+
+    private Boolean twoFactorEnabled;
+    private String twoFactorSecret;
+    private String profilePhotoFileId; // The 6-character ID from FilesAPI
+
+    private Date lastActiveTime;
+    @Builder.Default
+    private Long activityCount = 0L;
+    @Builder.Default
+    private Boolean isBanned = false;
 
     @Override
     public String toString() {
@@ -57,7 +68,10 @@ public class User {
                 ", status='" + status + '\'' +
                 ", roles=" + roles +
                 ", apps='" + apps + '\'' +
-                ", profilePictures=" + profilePictures +
+                ", profilePhotoFileId='" + profilePhotoFileId + '\'' +
+                ", lastActiveTime=" + lastActiveTime +
+                ", activityCount=" + activityCount +
+                ", isBanned=" + isBanned +
                 '}';
     }
 }

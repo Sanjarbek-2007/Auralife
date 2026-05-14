@@ -71,7 +71,10 @@ public class ApiController {
                     user.getStatus(),
                     user.getRoles(),
                     user.getApps(),
-                    user.getProfilePictures(),devices);
+                    user.getProfilePhotoFileId(),
+                    devices,
+                    user.getJobTitle(),
+                    user.getOfficeLocation());
 
             System.out.println("User by id received: " + profileDTO.email());
             return new ResponseEntity<>(profileDTO, HttpStatus.OK);

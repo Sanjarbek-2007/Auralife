@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="#{terms.title}">Auralife - Terms of Use</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/assets/auralife-logo-svg.svg}" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .terms-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 40px;
+            background: var(--surface-container);
+            border-radius: 24px;
+            border: 1px border var(--outline-variant);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .terms-content {
+            line-height: 1.6;
+            color: var(--on-surface);
+            margin-top: 20px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+
+    <div class="terms-container">
+        <div class="auth-header" style="text-align: left; margin-bottom: 20px;">
+            <img th:src="@{/assets/auralife-logo-light-theme.png}" alt="Auralife Logo" class="auth-logo" style="margin-left: 0;">
+            <h1 th:text="#{terms.header}">Terms of Use</h1>
+        </div>
+        
+        <div class="terms-content">
+            <p th:text="#{terms.content}">Default terms content...</p>
+            <p style="margin-top: 20px;">
+                1. Data Usage: We collect information to personalize your experience and secure your account.<br>
+                2. Privacy: Your data is protected with industry-standard encryption.<br>
+                3. Responsibilities: You are responsible for maintaining the confidentiality of your account.
+            </p>
+        </div>
+
+        <a href="javascript:history.back()" class="back-link">← Back</a>
+    </div>
+</body>
+</html>

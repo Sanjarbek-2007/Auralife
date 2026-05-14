@@ -32,6 +32,8 @@ import uz.project.auralife.controllers.auth.signup.SignupDto;
 
 import org.springframework.beans.factory.annotation.Value;
 
+import uz.project.auralife.controllers.auth.signin.GoogleTrustDto;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -42,9 +44,11 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final ActivisationCodeRepository activationCodeRepository;
     private final EmailService emailService;
-    private final PhotoRepository photoRepository;
     private final DeviceRepository deviceRepository;
+    private final ConnectedAppService connectedAppService;
     private final UserContext userContext;
+    private final GeoIPService geoIPService;
+    private final nl.basjes.parse.useragent.UserAgentAnalyzer userAgentAnalyzer;
 
     private CodeTypes codeType;
 
@@ -84,18 +88,17 @@ public class AuthService {
         return code.toString();
     }
 
-    public ResponseEntity<Response> signup(SignupDto dto) {
+    public ResponseEntity<Response> signup(SignupDto dto, jakarta.servlet.http.HttpServletRequest request) {
         CheckUserExistanceResponse userExistanceResponse = checkExistance(new CheckUserExistaceDto(dto.phoneNumber(), dto.email(), dto.username()));
 
         if (!userExistanceResponse.getExists()) {
             User user = getUserEntity(dto);
             if (user != null) {
-                user.setProfilePictures(List.of(getOrCreateDefaultPhoto(dto.gender())));
                 rolesInit();
                 user.setRoles(Collections.singletonList(roleRepository.findByName("USER").get()));
                 User savedUser = userRepository.save(user);
-                Device device = getOrRegisterDevice(dto.deviceName(),dto.deviceType(), savedUser.getId(), dto.app(),true);
-                String token = jwtProvider.generate(user, device.getIotDeviceId());
+                Device device = getOrRegisterDevice(dto.deviceName(), dto.deviceType(), savedUser.getId(), dto.app(), true, request);
+                String token = jwtProvider.generate(user, device.getIotDeviceId(), dto.app());
                 activationSender(dto.email(), CodeTypes.ACCOUNT_ACTIVISION.getType());
                 return ResponseEntity.ok(new SignUpResponseDto(200,new JwtResponse(token, "Activation code has been sent to your account."),
                         device.getIotDeviceId(),
@@ -107,73 +110,130 @@ public class AuthService {
                 "", ""), HttpStatus.CONFLICT);
     }
 
-    @Value("${api.url}")
-    private String apiUrl;
 
-    @Transactional
-    public Photo getOrCreateDefaultPhoto(String gender) {
-        // Normalize gender input
-        String purposeName = gender.equalsIgnoreCase("male") ? "Male" : "Female";
-        String fileName = gender.equalsIgnoreCase("male") ? "male.png" : "female.png";
-        String filePath = "src/main/resources/icons/" + fileName;
+    public ResponseEntity<SignInResponse> signin(SigninDto dto, jakarta.servlet.http.HttpServletRequest request) {
+        Optional<User> user = userRepository.findByPhoneNumber(dto.phoneNumber());
+        return signIn(user, dto.password(), dto.deviceName(), dto.deviceType(), dto.app() ,false, request);
+    }
 
-        // Try to find existing photo ID without fetching the whole entity
-        Optional<Photo> existingId = photoRepository.findByPurposeName(purposeName);
-        if (existingId.isPresent()) {
-            return existingId.get();
+    public ResponseEntity<SignInResponse> signinByEmail(SigninByEmailDto dto, jakarta.servlet.http.HttpServletRequest request) {
+        Optional<User> user = userRepository.findByEmail(dto.email());
+        return signIn(user, dto.password(), dto.deviceName(), dto.deviceType(), dto.app(), false, request);
+    }
+
+    public ResponseEntity<SignInResponse> googleTrustedLogin(GoogleTrustDto dto, jakarta.servlet.http.HttpServletRequest request) {
+        Optional<User> userOpt = userRepository.findByEmail(dto.email());
+        User user;
+        if (userOpt.isEmpty()) {
+            // Auto-register if not exists
+            rolesInit();
+            Role userRole = roleRepository.findByName("USER").orElseGet(() -> roleRepository.save(new Role("USER", "AURALIFE")));
+            user = User.builder()
+                    .email(dto.email())
+                    .firstName(dto.firstName())
+                    .lastName(dto.lastName())
+                    .username(dto.email()) // use email as username if missing
+                    .status("active")
+                    .roles(Collections.singletonList(userRole))
+                    .build();
+            user = userRepository.save(user);
+        } else {
+            user = userOpt.get();
         }
 
-        // Create and save if not found
-        Photo saved = photoRepository.save(
-                new Photo(
-                        filePath,
-                        gender.toLowerCase(),
-                        apiUrl + "/photo/get?photoPath=" + filePath,
-                        "Auralife",
-                        purposeName
-                )
-        );
-        return saved;
+        Device device = getOrRegisterDevice(dto.deviceName(), dto.deviceType(), user.getId(), dto.app(), false, request);
+        String token = jwtProvider.generate(user, device.getIotDeviceId(), dto.app());
+        
+        return new ResponseEntity<>(new SignInResponse(
+                200, "Successfully signed in via Google (Trusted)",
+                token, device.getIotDeviceId(),
+                user.getFirstName(), user.getLastName(), user.getProfilePhotoFileId()), HttpStatus.OK);
     }
 
-    public ResponseEntity<SignInResponse> signin(SigninDto dto) {
-        Optional<User> user = userRepository.findByPhoneNumber(dto.phoneNumber());
-        return signIn(user, dto.password(), dto.deviceName(), dto.deviceType(), dto.app() ,false);
-    }
-
-    public ResponseEntity<SignInResponse> signinByEmail(SigninByEmailDto dto) {
-        Optional<User> user = userRepository.findByEmail(dto.email());
-        return signIn(user, dto.password(), dto.deviceName(), dto.deviceType(), dto.app(), false );
-    }
-
-    private ResponseEntity<SignInResponse> signIn(Optional<User> user, String password, String deviceName, String deviceType, String app, Boolean isPrime) {
+    private ResponseEntity<SignInResponse> signIn(Optional<User> user, String password, String deviceName, String deviceType, String app, Boolean isPrime, jakarta.servlet.http.HttpServletRequest request) {
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
 
-            Device device = getOrRegisterDevice(deviceName, deviceType, user.get().getId(), app, isPrime);
-            String token = jwtProvider.generate(user.get(), device.getIotDeviceId() );
+            Device device = getOrRegisterDevice(deviceName, deviceType, user.get().getId(), app, isPrime, request);
+            String token = jwtProvider.generate(user.get(), device.getIotDeviceId(), app );
             return new ResponseEntity<>(new SignInResponse(
                     200, "Successfuly signed in as a device "+device.getIotDeviceId(),
-                    token,device.getIotDeviceId()), HttpStatus.OK);
+                    token, device.getIotDeviceId(),
+                    user.get().getFirstName(), user.get().getLastName(), user.get().getProfilePhotoFileId()), HttpStatus.OK);
         }
         return null;
     }
-    public Device getOrRegisterDevice(String deviceName, String deviceType, Long userId, String app, Boolean isPrime) {
-        Optional<Device> device = deviceRepository
-                .findByUserIdAndDeviceNameAndDeviceTypeAndPermittedApps(userId, deviceName, deviceType, app);
+    private String getClientIp(jakarta.servlet.http.HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
+    }
 
-        return device.orElseGet(() -> deviceRepository.save(new Device(
+    public Device getOrRegisterDevice(String deviceName, String deviceType, Long userId, String app, Boolean isPrime, jakarta.servlet.http.HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        String ip = getClientIp(request);
+        String location = geoIPService.getLocation(ip);
+        
+        String detailedDeviceName = deviceName;
+        String browserInfo = deviceType;
+
+        if (userAgent != null) {
+            nl.basjes.parse.useragent.UserAgent parsed = userAgentAnalyzer.parse(userAgent);
+            String osName = parsed.getValue("OperatingSystemNameVersion");
+            String agentName = parsed.getValue("AgentNameVersion");
+            String brand = parsed.getValue("DeviceBrand");
+            String model = parsed.getValue("DeviceName");
+
+            if (!"Unknown".equals(brand) && !"Unknown".equals(model)) {
+                detailedDeviceName = brand + " " + model;
+            } else if (!"Unknown".equals(model)) {
+                detailedDeviceName = model;
+            }
+
+            browserInfo = agentName + " on " + osName;
+        }
+
+        final String finalDetailedName = detailedDeviceName;
+        final String finalBrowserInfo = browserInfo;
+
+        Optional<Device> deviceOpt = deviceRepository
+                .findByUserIdAndDeviceNameAndDeviceTypeAndPermittedApps(userId, detailedDeviceName, deviceType, app);
+
+        if (deviceOpt.isPresent()) {
+            Device device = deviceOpt.get();
+            device.setLastActivityTime(LocalDateTime.now());
+            device.setIpAddress(ip);
+            device.setLocation(location);
+            device.setBrowser(finalBrowserInfo);
+            return deviceRepository.save(device);
+        }
+
+        Device newDevice = new Device(
                 userId,
                 isPrime,
                 UUID.randomUUID().toString(),
-                deviceName,
+                finalDetailedName,
                 deviceType,
                 app,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                ""
-        )));
+                location
+        );
+        newDevice.setIpAddress(ip);
+        newDevice.setBrowser(finalBrowserInfo);
+        return deviceRepository.save(newDevice);
     }
 
+    public ResponseEntity<SignInResponse> exchangeSsoToken(String targetAppId, String deviceName, String deviceType, jakarta.servlet.http.HttpServletRequest request) {
+        Long userId = userContext.getUserId();
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Device device = getOrRegisterDevice(deviceName, deviceType, userId, targetAppId, false, request);
+        String token = jwtProvider.generate(user, device.getIotDeviceId(), targetAppId);
+        connectedAppService.registerApp(userId, Apps.valueOf(targetAppId.toUpperCase()));
+        return ResponseEntity.ok(new SignInResponse(200, "SSO token generated", token, device.getIotDeviceId(),
+                user.getFirstName(), user.getLastName(), user.getProfilePhotoFileId()));
+    }
 
     public void quitFromDevice(){
         deviceRepository.deleteByIotDeviceId(userContext.getIotDeviceId());
@@ -277,8 +337,13 @@ public class AuthService {
         );
         String messageCode = "Your " + type + " code is " + activisationCode.getCode() +
                 "\n You can use this before expiry time of 5 minutes ends." + activisationCode.getExpityDateTime() + " ";
-        //                     emailMessage = emailService.sendActivationEmail(dto.email(), dto.firstName(), link + "/auth/activate?email=" + dto.email() + "&token=" + activisationCode + "&date" + LocalDateTime.now());
-        String emailMessage = emailService.sendEmail(email, email, messageCode + "\nGo to " + link + " To get access to JORASOFT");
+        try {
+            log.info("Sending verification code {} to {}", activisationCode.getCode(), email);
+            emailService.sendAuthCodeEmail(email, activisationCode.getCode(), type);
+        } catch (Exception e) {
+            log.error("Failed to send HTML activation email", e);
+            emailService.sendEmail(email, "Auralife " + type + " Code", messageCode);
+        }
         activationCodeRepository.save(activisationCode);
         return true;
     }
@@ -303,12 +368,8 @@ public class AuthService {
         return ResponseEntity.ok("We send " + type + " code " + "account with email : " + email);
     }
 
-    private boolean rolesInit() {
-        if (roleRepository.findByName("USER").isPresent()) {
-            return true;
-        }
-        roleRepository.save(new Role("USER", "AURALIFE"));
-        return true;
+    private Role rolesInit() {
+        return roleRepository.findByName("USER").orElseGet(() -> roleRepository.save(new Role("USER", "AURALIFE")));
     }
 
 //    @Value("${secret.key}")

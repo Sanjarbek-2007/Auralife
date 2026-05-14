@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Auralife SSO - Login</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/assets/auralife-logo-svg.svg}" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <!-- Animated aesthetic background shapes -->
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+
+    <div class="top-controls">
+        <div class="custom-dropdown" id="lang-dropdown">
+            <div class="dropdown-selected" onclick="toggleDropdown()">
+                <span id="current-lang-icon">🌐</span>
+                <span id="current-lang-text">English</span>
+            </div>
+            <div class="dropdown-options" id="lang-options">
+                <div class="dropdown-option" onclick="changeLanguage('uz')">
+                    <span class="flag">🇺🇿</span> <span th:text="#{lang.uz}">O'zbek</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('en')">
+                    <span class="flag">🇺🇸</span> English
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ru')">
+                    <span class="flag">🇷🇺</span> <span th:text="#{lang.ru}">Русский</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('es')">
+                    <span class="flag">🇪🇸</span> <span th:text="#{lang.es}">Español</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('zh')">
+                    <span class="flag">🇨🇳</span> <span th:text="#{lang.zh}">中文</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ja')">
+                    <span class="flag">🇯🇵</span> <span th:text="#{lang.ja}">日本語</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ar')">
+                    <span class="flag">🇸🇦</span> <span th:text="#{lang.ar}">العربية</span>
+                </div>
+            </div>
+        </div>
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="theme-toggle">
+                <input type="checkbox" id="theme-toggle" />
+                <div class="slider round"></div>
+            </label>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <img id="auth-logo" th:src="@{/assets/auralife-logo-light-theme.png}" alt="Auralife Logo" class="auth-logo">
+            <h1 th:text="#{login.header}">Auralife</h1>
+            <p th:text="#{login.subheader}">Sign in to continue to your apps</p>
+        </div>
+
+        <form id="login-form">
+            <div th:if="${param.error}" class="error-msg" th:text="#{login.error}">
+                Invalid username and password.
+            </div>
+            <div th:if="${param.logout}" class="success-msg" th:text="#{login.logout}">
+                You have been logged out.
+            </div>
+
+            <div class="input-group">
+                <label for="email" th:text="#{login.email}">Email or Phone</label>
+                <input type="text" id="email" name="username" placeholder="someone@example.com" required>
+            </div>
+            
+            <div class="input-group">
+                <label for="password" th:text="#{login.password}">Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="btn-primary" th:text="#{login.signin}">Sign In</button>
+            <div class="auth-footer" style="text-align: right; margin-top: 10px;">
+                <a th:href="@{/auth/page/password-reset-request}" th:text="#{login.forgot}">Forgot Password?</a>
+            </div>
+        </form>
+
+        <div class="divider" th:text="#{login.or}">or</div>
+
+        <div id="g_id_onload"
+             data-client_id="953088377491-214ali13bm0eka526afm86dnnr1254op.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g-id-wrapper">
+            <button type="button" class="custom-btn-google" id="google-login-btn">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
+                <span th:text="#{login.submit_with_google}">Sign in with Google</span>
+            </button>
+        </div>
+
+        <div class="auth-footer">
+            <span th:text="#{login.signup_prompt}">Don't have an account?</span> 
+            <a th:href="@{/auth/page/signup}" th:text="#{login.signup}">Sign Up</a>
+        </div>
+        <div class="auth-footer" style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+            <a th:href="@{/auth/page/account-chooser}" th:text="#{login.choose}">Choose another account</a>
+            <a th:href="@{/auth/page/terms}" th:text="#{login.terms}" target="_blank" style="font-size: 12px; opacity: 0.7;">Terms of Use</a>
+        </div>
+    </div>
+
+    <script th:src="@{/js/auth.js}"></script>
+</body>
+</html>

@@ -1,13 +1,14 @@
 spring:
   application:
     name: Jorasoft
-#  datasource:
-#    url: jdbc:postgresql://localhost:5432/auralife
-#    username: postgres
-#    password: tplink01459520
-#    driverClassName: org.postgresql.Driver
 
-
+  config:
+    import: "optional:file:../config/shared-settings.yml"
+  datasource:
+    url: jdbc:postgresql://localhost:5432/auralife
+    driverClassName: org.postgresql.Driver
+    username: postgres
+    password: tplink01459520
   jpa:
     hibernate:
       ddl-auto: update
@@ -15,6 +16,22 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 953088377491-214ali13bm0eka526afm86dnnr1254op.apps.googleusercontent.com
+            # TODO: Replace with your real Google client secret from https://console.cloud.google.com
+            # Also add http://localhost:20007/login/oauth2/code/google as an Authorized Redirect URI!
+            client-secret: your_google_client_secret_placeholder
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+
+
+
   mail:
     host: smtp.gmail.com
     port: 587
@@ -30,14 +47,63 @@ spring:
 secret:
   key: ApeVFjUOyTmk7XYwgcYwIEsix1mALAsQhftYQqWHE8P6kcnqbZv0Uxj9HduKEvjXzz0sVYCG0ZjSBtmxadtAiQ==
 
+# --- LOCAL DEVELOPMENT (Commented out when deploying) ---
 server:
-  port: 20007
-#  port: ${PORT:8080}
-
-
+ port: 20007
 
 api:
-  url: https://localhost:20007
-  photoUrl: http://localhost:20007/photo/get
-  photo-save-path: src/main/resources/images/
-  photo-save-directory: D:/uploads/
+ url: http://localhost:20007
+
+account-centre:
+ url: http://localhost:3000
+
+grpc:
+  server:
+    port: 9090
+  client:
+    files-api:
+      address: 'static://localhost:9091'
+      negotiation-type: plaintext
+click:
+  service-id: 96238
+  merchant-id: 78109
+  merchant-user-id: 56889_998939110441
+  secret-key: YOUR_SECRET_KEY
+  return-url: https://account.auralife.uz/billing
+# --- END LOCAL DEVELOPMENT ---
+
+---
+spring:
+  config:
+    activate:
+      on-profile: deploy
+
+
+# Inter-service security key — used in X-Internal-Key header for microservice-to-microservice calls
+# Keep this secret and the same value in all microservices (FilesAPI, Auralife, etc.)
+#internal:
+#  api-key: aura-internal-Xk9mP2vQeL4nRzJbYwA7cT0uHdF6sGi1
+#
+#server:
+#  port: 20007
+#api:
+#  url: http://auth.auralife.uz
+#  photo-save-path: /var/www/auralife/images/
+#  photo-save-directory: /var/www/auralife/uploads/
+#
+#account-centre:
+#  url: http://account.auralife.uz
+#
+#grpc:
+#  client:
+#    files-api:
+#      address: 'static://127.0.0.1:9091'
+#      negotiation-type: plaintext
+---
+# Click deploy profile overrides (uncomment and fill when deploying)
+#click:
+#  service-id: 96238
+#  merchant-id: YOUR_MERCHANT_ID
+#  merchant-user-id: YOUR_MERCHANT_USER_ID
+#  secret-key: YOUR_SECRET_KEY
+#  return-url: https://account.auralife.uz/billing

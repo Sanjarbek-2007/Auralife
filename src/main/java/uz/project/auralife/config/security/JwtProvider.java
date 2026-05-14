@@ -19,7 +19,7 @@ public class JwtProvider {
     @Value("${secret.key}")
     private String secretKey;
 
-    public String generate(User user, String iotDeviceId) {
+    public String generate(User user, String iotDeviceId, String appId) {
         StringJoiner roles = new StringJoiner(",");
 
         if (user.getRoles() == null) {
@@ -34,6 +34,7 @@ public class JwtProvider {
                 .expiration(new Date(System.currentTimeMillis() + 30L * 24 * 60 * 60 * 1000)) // 30 days
                 .claim("roles", roles.toString())
                 .claim("iot_device_id", iotDeviceId) // 👈 attach the device
+                .claim("app", appId != null ? appId.toUpperCase() : "AURALIFE") // 👈 attach authorized app
                 .signWith(key())
                 .compact();
     }

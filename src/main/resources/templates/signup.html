@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Auralife SSO - Create Account</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/assets/auralife-logo-svg.svg}" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+
+<body>
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+
+    <div class="top-controls">
+        <div class="custom-dropdown" id="lang-dropdown">
+            <div class="dropdown-selected" onclick="toggleDropdown()">
+                <span id="current-lang-icon">🌐</span>
+                <span id="current-lang-text">English</span>
+            </div>
+            <div class="dropdown-options" id="lang-options">
+                <div class="dropdown-option" onclick="changeLanguage('uz')">
+                    <span class="flag">🇺🇿</span> <span th:text="#{lang.uz}">O'zbek</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('en')">
+                    <span class="flag">🇺🇸</span> English
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ru')">
+                    <span class="flag">🇷🇺</span> <span th:text="#{lang.ru}">Русский</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('es')">
+                    <span class="flag">🇪🇸</span> <span th:text="#{lang.es}">Español</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('zh')">
+                    <span class="flag">🇨🇳</span> <span th:text="#{lang.zh}">中文</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ja')">
+                    <span class="flag">🇯🇵</span> <span th:text="#{lang.ja}">日本語</span>
+                </div>
+                <div class="dropdown-option" onclick="changeLanguage('ar')">
+                    <span class="flag">🇸🇦</span> <span th:text="#{lang.ar}">العربية</span>
+                </div>
+            </div>
+        </div>
+        <div class="theme-switch-wrapper">
+            <label class="theme-switch" for="theme-toggle">
+                <input type="checkbox" id="theme-toggle" />
+                <div class="slider round"></div>
+            </label>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <img id="auth-logo" th:src="@{/assets/auralife-logo-light-theme.png}" alt="Auralife Logo" class="auth-logo">
+            <h1 th:text="#{signup.header}">Create Account</h1>
+            <p th:text="#{signup.subheader}">Join the Auralife platform</p>
+        </div>
+
+        <form id="signup-form">
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;">
+                    <label for="firstName" th:text="#{signup.firstName}">First Name</label>
+                    <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label for="lastName" th:text="#{signup.lastName}">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="username" th:text="#{signup.username}">Username</label>
+                <input type="text" id="username" name="username" placeholder="johndoe123" required>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;">
+                    <label for="email" th:text="#{signup.email}">Email</label>
+                    <input type="email" id="email" name="email" placeholder="john@example.com" required
+                        onblur="checkEmailExists(this.value)">
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label for="phoneNumber" th:text="#{signup.phone}">Phone Number</label>
+                    <input type="text" id="phoneNumber" name="phoneNumber" placeholder="+123456789" required>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;">
+                    <label for="birthDate" th:text="#{signup.birthdate}">Birth Date</label>
+                    <input type="date" id="birthDate" name="birthDate" required>
+                </div>
+                <div class="input-group" style="flex: 1; position: relative;">
+                    <label for="gender" th:text="#{signup.gender}">Gender</label>
+                    <input type="hidden" id="gender" name="gender" value="male" required>
+                    <div class="custom-dropdown" id="gender-dropdown" style="width: 100%;">
+                        <div class="dropdown-selected" onclick="toggleGenderDropdown()"
+                            style="justify-content: space-between;">
+                            <span id="current-gender-text" th:text="#{signup.gender.male}">Male</span>
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2"
+                                fill="none">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="dropdown-options" id="gender-options" style="width: 100%;">
+                            <div class="dropdown-option" onclick="selectGender('male', this.innerText)">
+                                <span th:text="#{signup.gender.male}">Male</span>
+                            </div>
+                            <div class="dropdown-option" onclick="selectGender('female', this.innerText)">
+                                <span th:text="#{signup.gender.female}">Female</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="password" th:text="#{signup.password}">Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required>
+            </div>
+
+            <div class="input-group checkbox-group" style="flex-direction: row; align-items: start; gap: 10px; margin-bottom: 20px;">
+                <input type="checkbox" id="terms" name="terms" required style="width: auto; margin-top: 4px;">
+                <label for="terms" style="font-size: 13px; font-weight: 400; line-height: 1.4; margin-bottom: 0;" th:utext="#{signup.terms}">
+                    I agree to the <a href="/auth/page/terms" target="_blank">Terms of Use</a> and acknowledge data usage.
+                </label>
+            </div>
+
+            <button type="submit" class="btn-primary" id="signup-submit-btn" th:text="#{signup.submit}">Sign Up</button>
+        </form>
+
+        <div class="divider" th:text="#{login.or}">or</div>
+
+        <div id="g_id_onload" data-client_id="953088377491-214ali13bm0eka526afm86dnnr1254op.apps.googleusercontent.com"
+            data-context="signup" data-ux_mode="popup" data-callback="handleCredentialResponse"
+            data-auto_prompt="false">
+        </div>
+        <div class="g-id-wrapper">
+            <button type="button" class="custom-btn-google" id="google-signup-btn">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google">
+                <span th:text="#{signup.submit_with_google}">Sign up with Google</span>
+            </button>
+        </div>
+
+        <div class="auth-footer">
+            <span th:text="#{signup.already_prompt}">Already have an account?</span>
+            <a th:href="@{/auth/page/login}" th:text="#{signup.already}">Sign In</a>
+        </div>
+    </div>
+
+    <script th:src="@{/js/auth.js}"></script>
+</body>
+
+</html>

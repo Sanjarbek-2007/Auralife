@@ -26,6 +26,13 @@ public class Device {
     private LocalDateTime joinedTime;
     private LocalDateTime lastActivityTime;
     private String location;
+    @Column(length = 255)
+    private String browser;
+    @Column(length = 45)
+    private String ipAddress;
+
+    @Transient
+    private boolean current;
 
     public Device(Long userId, Boolean idPrimary, String iotDeviceId, String deviceName, String deviceType, String permittedApps, LocalDateTime joinedTime, LocalDateTime lastActivityTime, String location) {
         this.userId = userId;
@@ -37,5 +44,7 @@ public class Device {
         this.joinedTime = joinedTime;
         this.lastActivityTime = lastActivityTime;
         this.location = location;
+        this.browser = deviceType; // Defaulting for now or pass as param
+        this.ipAddress = "unknown";
     }
 }

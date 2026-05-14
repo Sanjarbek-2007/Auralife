@@ -27,6 +27,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.List;
+
 @EnableWebSecurity
 @EnableMethodSecurity(jsr250Enabled = true, securedEnabled = true)
 @Configuration
@@ -56,7 +58,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
-    private final CustomUserDetailsService userDetailsService;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
@@ -65,11 +68,41 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(registr ->
                         registr
-                                .requestMatchers("/auth/**", "/try/**", "/v3/**", "/swagger-ui/**","/api/**", "/photo/**").permitAll()
-                                .requestMatchers("/error").permitAll() // Allow error endpoint
+                                // Public endpoints: auth pages, swagger, static assets, OAuth2, error
+                                .requestMatchers(
+                                        "/auth/**",
+                                        "/try/**",
+                                        "/v3/**",
+                                        "/swagger-ui/**",
+                                        "/photo/**",
+                                        "/files/**",
+                                        "/assets/**",
+                                        "/css/**",
+                                        "/js/**",
+                                        "/oauth2/**",
+                                        "/login/oauth2/**",
+                                        "/error",
+                                        "/api/v1/billing/plans",         // Public plan listing
+                                        "/api/v1/billing/click/prepare",  // Click SHOP-API webhook
+                                        "/api/v1/billing/click/complete"  // Click SHOP-API webhook
+                                ).permitAll()
+                                .requestMatchers("/api/v1/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                                // Everything else requires authentication
                                 .anyRequest().authenticated()
                 )
-                .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .formLogin(form -> form
+                        .loginPage("/auth/page/login")
+                        .loginProcessingUrl("/login")
+                        .defaultSuccessUrl("/", true)
+                        .failureUrl("/auth/page/login?error=true")
+                        .permitAll()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/auth/page/login")
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                )
+                .sessionManagement(config -> config.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return security.build();
@@ -78,16 +111,24 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOriginPattern("*"); // allow all origins
-        configuration.addAllowedMethod("*");        // allow all methods (GET, POST, PUT, DELETE, etc.)
-        configuration.addAllowedHeader("*");        // allow all headers
-        configuration.setAllowCredentials(true);    // allow credentials (cookies, auth headers)
+        configuration.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "http://localhost:*",
+                "https://*.ngrok-free.app",
+                "http://system-controll-panel.auralife.uz",
+                "https://system-controll-panel.auralife.uz",
+                "http://*.auralife.uz",
+                "https://*.auralife.uz"
+        ));
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -104,10 +145,5 @@ public class SecurityConfig {
                         .bearerFormat("JWT")
                         .in(SecurityScheme.In.HEADER)
                         .scheme("bearer")));
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }
