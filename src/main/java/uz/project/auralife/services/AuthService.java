@@ -226,13 +226,28 @@ public class AuthService {
     }
 
     public ResponseEntity<SignInResponse> exchangeSsoToken(String targetAppId, String deviceName, String deviceType, jakarta.servlet.http.HttpServletRequest request) {
+        if (targetAppId == null || targetAppId.isEmpty()) {
+            return ResponseEntity.badRequest().body(new SignInResponse(400, "targetAppId is missing", null, null, null, null, null));
+        }
         Long userId = userContext.getUserId();
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         Device device = getOrRegisterDevice(deviceName, deviceType, userId, targetAppId, false, request);
         String token = jwtProvider.generate(user, device.getIotDeviceId(), targetAppId);
-        connectedAppService.registerApp(userId, Apps.valueOf(targetAppId.toUpperCase().replace("-", "_")));
-        return ResponseEntity.ok(new SignInResponse(200, "SSO token generated", token, device.getIotDeviceId(),
-                user.getFirstName(), user.getLastName(), user.getProfilePhotoFileId()));
+        
+        Apps targetApp;
+        try {
+            targetApp = Apps.valueOf(targetAppId.toUpperCase().replace("-", "_"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new SignInResponse(400, "Invalid app identifier: " + targetAppId, null, null, null, null, null));
+        }
+        
+        connectedAppService.registerApp(userId, targetApp);
+        
+        SignInResponse response = new SignInResponse(200, "SSO token generated", token, device.getIotDeviceId(),
+                user.getFirstName(), user.getLastName(), user.getProfilePhotoFileId());
+        response.setRedirectUri(targetApp.getRedirectUri());
+        
+        return ResponseEntity.ok(response);
     }
 
     public void quitFromDevice(){

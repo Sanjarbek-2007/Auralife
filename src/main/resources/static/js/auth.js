@@ -93,9 +93,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const accounts = JSON.parse(localStorage.getItem('savedAccounts')) || [];
         const skipChooser = sessionStorage.getItem('skipChooser') === 'true';
         if (accounts.length > 0 && !skipChooser) {
-            window.location.href = '/auth/page/account-chooser';
+            window.location.href = '/auth/page/account-chooser' + window.location.search;
             return;
         }
+    }
+
+    const authContainer = document.querySelector('.auth-container');
+    if (authContainer) {
+        authContainer.style.opacity = '1';
     }
 
     // 4. Form Handlers

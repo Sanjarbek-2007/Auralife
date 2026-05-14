@@ -110,11 +110,10 @@
                 `;
                 
                 item.addEventListener('click', async () => {
-                    const redirectUri = sessionStorage.getItem('redirect_uri');
-                    const appId = sessionStorage.getItem('app_id') || 'AURALIFE';
+                    const appId = "[[${app_id}]]" || sessionStorage.getItem('app_id') || 'AURALIFE';
                     const token = acc.token;
                     
-                    if (hasToken && redirectUri) {
+                    if (hasToken) {
                         try {
                             const res = await fetch('/auth/sso/exchange', {
                                 method: 'POST',
@@ -134,8 +133,13 @@
                                 // Successful exchange, mark active
                                 acc.active = true;
                                 localStorage.setItem('savedAccounts', JSON.stringify(accounts));
-                                window.location.href = redirectUri + "?token=" + data.accessToken;
-                                return;
+                                
+                                // The backend now returns the correct redirectUri based on appId
+                                const finalRedirect = data.redirectUri || "[[${session.redirect_uri}]]" || sessionStorage.getItem('redirect_uri');
+                                if (finalRedirect) {
+                                    window.location.href = finalRedirect + (finalRedirect.includes('?') ? '&' : '?') + "token=" + data.accessToken;
+                                    return;
+                                }
                             }
                         } catch (e) {
                             console.error("SSO attempt failed", e);

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @GrpcGlobalServerInterceptor
 public class GrpcInternalKeyInterceptor implements ServerInterceptor {
 
-    @Value("${internal.api-key}")
+    @Value("${internal.api-key:aura-internal-Xk9mP2vQeL4nRzJbYwA7cT0uHdF6sGi1}")
     private String internalApiKey;
 
     private static final Metadata.Key<String> INTERNAL_KEY_HEADER =

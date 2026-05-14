@@ -16,6 +16,7 @@ public class SignInResponse extends Response{
     private String firstName;
     private String lastName;
     private String profilePhotoFileId;
+    private String redirectUri;
 
     public SignInResponse(int status, String message, String accessToken, String iotDeviceId) {
         super(status, message);

@@ -77,8 +77,23 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         // Determine where to redirect: prefer session-stored redirect_uri, else account centre
         String targetUrl = (String) request.getSession().getAttribute("redirect_uri");
+        String appIdStr = (String) request.getSession().getAttribute("app_id");
+        
+        request.getSession().removeAttribute("redirect_uri");
+        request.getSession().removeAttribute("app_id");
+
+        if (appIdStr != null && !appIdStr.isEmpty()) {
+            try {
+                Apps requestedApp = Apps.valueOf(appIdStr);
+                if (requestedApp.getRedirectUri() != null && !requestedApp.getRedirectUri().isEmpty()) {
+                    targetUrl = requestedApp.getRedirectUri();
+                }
+            } catch (Exception e) {
+                log.warn("Invalid app_id provided during Google OAuth2 redirect: {}", appIdStr);
+            }
+        }
+
         if (targetUrl != null && !targetUrl.isEmpty()) {
-            request.getSession().removeAttribute("redirect_uri");
             log.info("Redirecting Google OAuth to custom redirect_uri: {}", targetUrl);
             getRedirectStrategy().sendRedirect(request, response, targetUrl + "?token=" + token);
         } else {

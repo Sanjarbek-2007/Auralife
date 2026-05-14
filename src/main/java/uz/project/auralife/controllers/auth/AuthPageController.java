@@ -14,6 +14,7 @@ public class AuthPageController {
     public String loginPage(
             @RequestParam(required = false) String username, 
             @RequestParam(required = false) String redirect_uri, 
+            @RequestParam(required = false) String app_id,
             Model model, 
             HttpSession session) {
         if (username != null) {
@@ -21,6 +22,15 @@ public class AuthPageController {
         }
         if (redirect_uri != null) {
             session.setAttribute("redirect_uri", redirect_uri);
+            model.addAttribute("redirect_uri", redirect_uri);
+        } else {
+            model.addAttribute("redirect_uri", session.getAttribute("redirect_uri"));
+        }
+        if (app_id != null) {
+            session.setAttribute("app_id", app_id);
+            model.addAttribute("app_id", app_id);
+        } else {
+            model.addAttribute("app_id", session.getAttribute("app_id"));
         }
         return "login";
     }
@@ -31,7 +41,23 @@ public class AuthPageController {
     }
 
     @GetMapping("/auth/page/account-chooser")
-    public String accountChooserPage() {
+    public String accountChooserPage(
+            @RequestParam(required = false) String app_id, 
+            @RequestParam(required = false) String redirect_uri,
+            Model model, 
+            HttpSession session) {
+        if (app_id != null) {
+            session.setAttribute("app_id", app_id);
+            model.addAttribute("app_id", app_id);
+        } else {
+            model.addAttribute("app_id", session.getAttribute("app_id"));
+        }
+        if (redirect_uri != null) {
+            session.setAttribute("redirect_uri", redirect_uri);
+            model.addAttribute("redirect_uri", redirect_uri);
+        } else {
+            model.addAttribute("redirect_uri", session.getAttribute("redirect_uri"));
+        }
         return "account-chooser";
     }
 
@@ -52,5 +78,10 @@ public class AuthPageController {
             model.addAttribute("redirect_uri", redirect_uri);
         }
         return "logout";
+    }
+
+    @GetMapping("/auth/page/terms")
+    public String termsPage() {
+        return "terms-of-use";
     }
 }
