@@ -92,6 +92,7 @@
             // Get server-side values safely via th:inline="javascript"
             const serverAppId = /*[[${app_id}]]*/ '';
             const serverRedirectUri = /*[[${session.redirect_uri}]]*/ '';
+            const signedOutLabel = /*[[#{chooser.signed_out}]]*/ 'Signed out';
             
             // Sanitize: Thymeleaf may produce literal "null" strings
             function safeStr(val) {
@@ -124,7 +125,7 @@
                     <div class="account-info">
                         <div class="account-name">${acc.name}</div>
                         <div class="account-email">${acc.email}</div>
-                        ${(!acc.active && hasToken) ? `<div class="account-status" style="font-size: 0.8rem; color: #ff9b42; margin-top: 4px;">Signed out</div>` : ''}
+                        ${(!acc.active && hasToken) ? `<div class="account-status" style="font-size: 0.8rem; color: #ff9b42; margin-top: 4px;">${signedOutLabel}</div>` : ''}
                     </div>
                 `;
                 
