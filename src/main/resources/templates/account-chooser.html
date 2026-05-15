@@ -155,9 +155,22 @@
                                 
                                 window.location.href = '/';
                                 return;
+                            } else {
+                                const data = await res.json().catch(() => ({}));
+                                const errorMsg = data.message || "SSO exchange failed";
+                                if (typeof showToast === 'function') {
+                                    showToast(errorMsg, 'error');
+                                } else {
+                                    console.error("SSO Error:", errorMsg);
+                                }
+                                return; // Don't redirect, stay on page to show error
                             }
                         } catch (e) {
                             console.error("SSO exchange failed:", e);
+                            if (typeof showToast === 'function') {
+                                showToast("Connection error occurred. Please try again.", 'error');
+                            }
+                            return;
                         }
                     }
                     
