@@ -225,7 +225,7 @@ public class AuthService {
         return deviceRepository.save(newDevice);
     }
 
-    public ResponseEntity<SignInResponse> exchangeSsoToken(String targetAppId, String deviceName, String deviceType, jakarta.servlet.http.HttpServletRequest request) {
+    public ResponseEntity<SignInResponse> exchangeSsoToken(String targetAppId, String deviceName, String deviceType, String sessionRedirectUri, jakarta.servlet.http.HttpServletRequest request) {
         if (targetAppId == null || targetAppId.isEmpty()) {
             return ResponseEntity.badRequest().body(new SignInResponse(400, "targetAppId is missing", null, null, null, null, null));
         }
@@ -243,10 +243,16 @@ public class AuthService {
         
         connectedAppService.registerApp(userId, targetApp);
         
+        // Use session redirect_uri as primary source, fallback to Apps enum value
+        String finalRedirect = (sessionRedirectUri != null && !sessionRedirectUri.isEmpty() && !"null".equals(sessionRedirectUri))
+                ? sessionRedirectUri
+                : targetApp.getRedirectUri();
+        
         SignInResponse response = new SignInResponse(200, "SSO token generated", token, device.getIotDeviceId(),
                 user.getFirstName(), user.getLastName(), user.getProfilePhotoFileId());
-        response.setRedirectUri(targetApp.getRedirectUri());
+        response.setRedirectUri(finalRedirect);
         
+        log.info("SSO exchange for app={}, redirectUri={}", targetAppId, finalRedirect);
         return ResponseEntity.ok(response);
     }
 

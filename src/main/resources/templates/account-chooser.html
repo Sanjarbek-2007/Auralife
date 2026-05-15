@@ -78,13 +78,22 @@
     </div>
 
     <script th:src="@{/js/auth.js}"></script>
-    <script>
+    <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', () => {
             const container = document.getElementById('account-list-container');
             let accounts = JSON.parse(localStorage.getItem('savedAccounts')) || [];
             
+            // Get server-side values safely via th:inline="javascript"
+            const serverAppId = /*[[${app_id}]]*/ '';
+            const serverRedirectUri = /*[[${session.redirect_uri}]]*/ '';
+            
+            // Sanitize: Thymeleaf may produce literal "null" strings
+            function safeStr(val) {
+                if (!val || val === 'null' || val === 'undefined') return '';
+                return val;
+            }
+            
             if (accounts.length === 0) {
-                // Redirect to login if no accounts saved
                 window.location.href = '/auth/page/login';
                 return;
             }
@@ -97,7 +106,7 @@
                 item.className = 'account-item';
                 
                 const avatar = acc.photoId 
-                    ? `<img src="http://files.media.auralife.uz/files/${acc.photoId}" class="account-avatar-img" onerror="this.outerHTML='<div class=\'account-avatar-initial\'>${initial}</div>'">`
+                    ? `<img src="http://files.media.auralife.uz/files/${acc.photoId}" class="account-avatar-img" onerror="this.outerHTML='<div class=\\'account-avatar-initial\\'>${initial}</div>'">`
                     : `<div class="account-avatar-initial">${initial}</div>`;
 
                 item.innerHTML = `
@@ -110,9 +119,7 @@
                 `;
                 
                 item.addEventListener('click', async () => {
-                    let springAppId = "[[${app_id != null ? app_id : ''}]]";
-                    if (springAppId === "null") springAppId = "";
-                    const appId = springAppId || sessionStorage.getItem('app_id') || 'AURALIFE';
+                    const appId = safeStr(serverAppId) || sessionStorage.getItem('app_id') || 'AURALIFE';
                     const token = acc.token;
                     
                     if (hasToken) {
@@ -132,24 +139,28 @@
                             
                             if (res.ok) {
                                 const data = await res.json();
-                                // Successful exchange, mark active
                                 acc.active = true;
                                 localStorage.setItem('savedAccounts', JSON.stringify(accounts));
                                 
-                                // The backend now returns the correct redirectUri based on appId
-                                const springRedirect = "[[${session.redirect_uri != null ? session.redirect_uri : ''}]]";
-                                const finalRedirect = data.redirectUri || springRedirect || sessionStorage.getItem('redirect_uri');
-                                if (finalRedirect && finalRedirect !== "null") {
-                                    window.location.href = finalRedirect + (finalRedirect.includes('?') ? '&' : '?') + "token=" + data.accessToken;
+                                const redirectFromApi = safeStr(data.redirectUri);
+                                const redirectFromSession = safeStr(serverRedirectUri);
+                                const redirectFromStorage = safeStr(sessionStorage.getItem('redirect_uri'));
+                                const finalRedirect = redirectFromApi || redirectFromSession || redirectFromStorage;
+                                
+                                if (finalRedirect) {
+                                    const separator = finalRedirect.includes('?') ? '&' : '?';
+                                    window.location.href = finalRedirect + separator + "token=" + data.accessToken;
                                     return;
                                 }
+                                
+                                window.location.href = '/';
+                                return;
                             }
                         } catch (e) {
-                            console.error("SSO attempt failed", e);
+                            console.error("SSO exchange failed:", e);
                         }
                     }
                     
-                    // Fallback to login if token missing or exchange failed
                     window.location.href = `/auth/page/login?username=${encodeURIComponent(acc.email)}`;
                 });
                 
@@ -159,3 +170,4 @@
     </script>
 </body>
 </html>
+

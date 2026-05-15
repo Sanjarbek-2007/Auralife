@@ -472,6 +472,7 @@ input:checked + .slider:before {
   .auth-container {
     padding: 30px 20px;
     border-radius: 0;
+    margin: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;

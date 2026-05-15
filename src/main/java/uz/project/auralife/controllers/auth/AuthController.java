@@ -75,8 +75,9 @@ public class AuthController {
         return authService.userMatch(dto);
     }
     @PostMapping("/sso/exchange")
-    public ResponseEntity<?> exchangeSsoToken(@RequestBody SsoExchangeDto dto, jakarta.servlet.http.HttpServletRequest request) {
-        return authService.exchangeSsoToken(dto.appId(), dto.deviceName(), dto.deviceType(), request);
+    public ResponseEntity<?> exchangeSsoToken(@RequestBody SsoExchangeDto dto, jakarta.servlet.http.HttpServletRequest request, jakarta.servlet.http.HttpSession session) {
+        String sessionRedirectUri = (String) session.getAttribute("redirect_uri");
+        return authService.exchangeSsoToken(dto.appId(), dto.deviceName(), dto.deviceType(), sessionRedirectUri, request);
     }
 
     public record SsoExchangeDto(String appId, String deviceName, String deviceType) {}

@@ -99,7 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const authContainer = document.querySelector('.auth-container');
+    const loadingOverlay = document.getElementById('initial-loading');
     if (authContainer) {
+        if (loadingOverlay) loadingOverlay.style.display = 'none';
         authContainer.style.opacity = '1';
     }
 
@@ -137,8 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     saveAccount(emailInput, fullName, data.accessToken, data.profilePhotoFileId);
                     localStorage.setItem('accessToken', data.accessToken);
                     const redirectUri = sessionStorage.getItem('redirect_uri');
-                    if (redirectUri && sessionStorage.getItem('app_id') === (sessionStorage.getItem('app_id') || 'AURALIFE')) {
-                        window.location.href = '/auth/page/account-chooser';
+                    const appId = sessionStorage.getItem('app_id');
+                    
+                    if (redirectUri && redirectUri !== 'null' && appId && appId !== 'AURALIFE') {
+                        const separator = redirectUri.includes('?') ? '&' : '?';
+                        window.location.href = redirectUri + separator + "token=" + data.accessToken;
                     } else {
                         window.location.href = '/auth/page/account-chooser';
                     }
@@ -161,7 +166,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             const fullName = (data2.firstName && data2.lastName) ? `${data2.firstName} ${data2.lastName}` : data2.firstName || emailInput.split('@')[0];
                             saveAccount(emailInput, fullName, data2.accessToken, data2.profilePhotoFileId);
                             localStorage.setItem('accessToken', data2.accessToken);
-                            window.location.href = '/auth/page/account-chooser';
+                            const redirectUriEmail = sessionStorage.getItem('redirect_uri');
+                            const appIdEmail = sessionStorage.getItem('app_id');
+                            if (redirectUriEmail && redirectUriEmail !== 'null' && appIdEmail && appIdEmail !== 'AURALIFE') {
+                                const separator = redirectUriEmail.includes('?') ? '&' : '?';
+                                window.location.href = redirectUriEmail + separator + "token=" + data2.accessToken;
+                            } else {
+                                window.location.href = '/auth/page/account-chooser';
+                            }
                         } else {
                             showToast(data2.message || data2.error || document.querySelector('.error-msg')?.innerText || "Login failed. Check credentials.", 'error');
                         }
@@ -357,7 +369,14 @@ window.handleCredentialResponse = function(response) {
             showToast("Google login successful!", 'success');
             saveAccount(googleUser.email, googleUser.given_name || googleUser.email.split('@')[0], data.accessToken);
             localStorage.setItem('accessToken', data.accessToken);
-            window.location.href = "/auth/page/account-chooser";
+            const redirectUri = sessionStorage.getItem('redirect_uri');
+            const appId = sessionStorage.getItem('app_id');
+            if (redirectUri && redirectUri !== 'null' && appId && appId !== 'AURALIFE') {
+                const separator = redirectUri.includes('?') ? '&' : '?';
+                window.location.href = redirectUri + separator + "token=" + data.accessToken;
+            } else {
+                window.location.href = "/auth/page/account-chooser";
+            }
         } else {
             showToast("Google Login failed", 'error');
         }
