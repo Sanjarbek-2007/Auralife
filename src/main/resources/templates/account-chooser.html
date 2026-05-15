@@ -12,6 +12,12 @@
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
 
+    <div id="initial-loading" style="position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; pointer-events: none; background: var(--bg-gradient);">
+        <div style="width: 40px; height: 40px; border: 4px solid var(--glass-border); border-top-color: var(--btn-bg); border-radius: 50%; min-width: 40px; animation: spin 1s linear infinite; margin-bottom: 12px;"></div>
+        <div style="color: var(--text-primary); font-weight: 500; font-size: 0.9rem;" th:text="#{login.checking_session}">Checking session...</div>
+        <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+    </div>
+
     <div class="top-controls">
         <div class="custom-dropdown" id="lang-dropdown">
             <div class="dropdown-selected" onclick="toggleDropdown()">
@@ -94,7 +100,11 @@
             }
             
             if (accounts.length === 0) {
-                window.location.href = '/auth/page/login';
+                if (typeof smoothRedirect === 'function') {
+                    smoothRedirect('/auth/page/login');
+                } else {
+                    window.location.href = '/auth/page/login';
+                }
                 return;
             }
 
@@ -149,11 +159,19 @@
                                 
                                 if (finalRedirect) {
                                     const separator = finalRedirect.includes('?') ? '&' : '?';
-                                    window.location.href = finalRedirect + separator + "token=" + data.accessToken;
+                                    if (typeof smoothRedirect === 'function') {
+                                        smoothRedirect(finalRedirect + separator + "token=" + data.accessToken);
+                                    } else {
+                                        window.location.href = finalRedirect + separator + "token=" + data.accessToken;
+                                    }
                                     return;
                                 }
                                 
-                                window.location.href = '/';
+                                if (typeof smoothRedirect === 'function') {
+                                    smoothRedirect('/');
+                                } else {
+                                    window.location.href = '/';
+                                }
                                 return;
                             } else {
                                 const data = await res.json().catch(() => ({}));
@@ -174,7 +192,11 @@
                         }
                     }
                     
-                    window.location.href = `/auth/page/login?username=${encodeURIComponent(acc.email)}`;
+                    if (typeof smoothRedirect === 'function') {
+                        smoothRedirect(`/auth/page/login?username=${encodeURIComponent(acc.email)}`);
+                    } else {
+                        window.location.href = `/auth/page/login?username=${encodeURIComponent(acc.email)}`;
+                    }
                 });
                 
                 container.appendChild(item);
