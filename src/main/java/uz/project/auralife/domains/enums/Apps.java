@@ -8,12 +8,10 @@ public enum Apps {
     AURALIFE("AURALIFE", null),
     TEXTORA("TEXTORA", null),
     HAYDA("HAYDA", null),
-    TABIB_CLINIX("TABIB_CLINIX", null),
-    TABIB_BUSINESS("TABIB_BUSINESS", null),
-    TABIB("TABIB", null),
     CLINIX("CLINIX", null),
     CLINIX_PATIENTS("CLINIX_PATIENTS", null),
-    CLINIX_STAFF("CLINIX_STAFF", null);
+    CLINIX_STAFF("CLINIX_STAFF", null),
+    DOCFORGE("DOCFORGE", "https://docforge.uz/auth/callback");
 
     private String value;
     private String redirectUri;
