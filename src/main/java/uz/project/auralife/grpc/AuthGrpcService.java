@@ -36,11 +36,11 @@ public class AuthGrpcService extends AuthServiceGrpc.AuthServiceImplBase {
 
         try {
             Claims claims = jwtProvider.parse(token); 
-            String username = claims.getSubject();
+            String email = claims.getSubject();
             
             responseBuilder.setIsValid(true);
-            responseBuilder.setUsername(username);
-            log.info("Successfully validated token via gRPC for user: {}", username);
+            responseBuilder.setEmail(email);
+            log.info("Successfully validated token via gRPC for user: {}", email);
         } catch (Exception e) {
             log.error("Failed to validate token via gRPC", e);
             responseBuilder.setIsValid(false);
@@ -66,7 +66,6 @@ public class AuthGrpcService extends AuthServiceGrpc.AuthServiceImplBase {
             
             UserResponse.Builder responseBuilder = UserResponse.newBuilder()
                     .setId(user.getId() != null ? user.getId() : 0L)
-                    .setUsername(user.getUsername() != null ? user.getUsername() : "")
                     .setEmail(user.getEmail() != null ? user.getEmail() : "")
                     .setFirstName(user.getFirstName() != null ? user.getFirstName() : "")
                     .setLastName(user.getLastName() != null ? user.getLastName() : "")

@@ -11,6 +11,7 @@ public enum Apps {
     CLINIX("CLINIX", null),
     CLINIX_PATIENTS("CLINIX_PATIENTS", null),
     CLINIX_STAFF("CLINIX_STAFF", null),
+    CLINIX_WEB("CLINIX_WEB", null),
     DOCFORGE("DOCFORGE", "https://docforge.uz/auth/callback");
 
     private String value;
