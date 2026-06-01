@@ -374,6 +374,24 @@ input:checked + .slider:before {
   flex-direction: column;
   gap: 12px;
   margin-bottom: 24px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Beautiful scrollbar */
+.account-list::-webkit-scrollbar {
+  width: 6px;
+}
+.account-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.account-list::-webkit-scrollbar-thumb {
+  background: rgba(234, 115, 21, 0.3);
+  border-radius: 10px;
+}
+.account-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(234, 115, 21, 0.5);
 }
 
 .account-item {
@@ -384,13 +402,82 @@ input:checked + .slider:before {
   border: 1px solid var(--glass-border);
   background: var(--input-bg);
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.account-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(234, 115, 21, 0.12) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.account-item:hover::after {
+  opacity: 1;
 }
 
 .account-item:hover {
   background: var(--input-focus);
   transform: translateX(4px);
+}
+
+.account-item:active {
+  transform: scale(0.97) translateX(2px) !important;
+}
+
+.account-item.clicked-active {
+  transform: scale(0.96) !important;
+  border-color: var(--btn-bg) !important;
+  box-shadow: 0 0 15px rgba(234, 115, 21, 0.3) !important;
+  background: rgba(234, 115, 21, 0.05) !important;
+}
+
+.account-item.disabled-sibling {
+  opacity: 0.4 !important;
+  pointer-events: none !important;
+  filter: grayscale(40%);
+  transform: scale(0.98) !important;
+}
+
+.remove-account-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  transform: scale(0.8);
+  pointer-events: auto;
+  margin-left: 8px;
+}
+
+[data-theme="light"] .remove-account-btn {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.account-item:hover .remove-account-btn {
+  opacity: 0.7;
+  transform: scale(1);
+}
+
+.remove-account-btn:hover {
+  opacity: 1 !important;
+  background: #FF4D4F !important;
+  border-color: #FF4D4F !important;
+  color: white !important;
+  box-shadow: 0 4px 10px rgba(255, 77, 79, 0.4);
 }
 
 .account-avatar {
@@ -695,5 +782,142 @@ input:checked + .slider:before {
 
 #initial-loading.fade-out {
   opacity: 0;
+}
+
+/* Premium SSO Loading Overlay */
+.sso-loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 14, 15, 0.85);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+[data-theme="light"] .sso-loader-overlay {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.sso-loader-overlay.active {
+  opacity: 1;
+}
+
+.sso-loader-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+  padding: 40px;
+  border-radius: 28px;
+  text-align: center;
+  max-width: 380px;
+  width: 90%;
+  transform: translateY(20px) scale(0.95);
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sso-loader-overlay.active .sso-loader-card {
+  transform: translateY(0) scale(1);
+}
+
+/* Spinner */
+.sso-spinner-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+}
+
+.sso-spinner-outer {
+  position: absolute;
+  inset: 0;
+  border: 3px solid transparent;
+  border-top-color: var(--btn-bg);
+  border-bottom-color: var(--btn-bg);
+  border-radius: 50%;
+  animation: sso-spin 1.5s cubic-bezier(0.53, 0.21, 0.29, 0.67) infinite;
+}
+
+.sso-spinner-inner {
+  position: absolute;
+  inset: 8px;
+  border: 3px solid transparent;
+  border-left-color: #FF9B42;
+  border-right-color: #FF9B42;
+  border-radius: 50%;
+  animation: sso-spin-reverse 1.2s cubic-bezier(0.53, 0.21, 0.29, 0.67) infinite;
+}
+
+.sso-spinner-logo {
+  position: absolute;
+  inset: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--btn-bg);
+  text-shadow: 0 0 10px rgba(234, 115, 21, 0.4);
+  animation: pulse-logo 1.5s ease-in-out infinite;
+}
+
+@keyframes sso-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes sso-spin-reverse {
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes pulse-logo {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+/* Typography & Progress */
+.sso-loader-text {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
+}
+
+.sso-loader-subtext {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+}
+
+.sso-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+}
+
+[data-theme="light"] .sso-progress-bar {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.sso-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #EA7315 0%, #FF9B42 100%);
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(234, 115, 21, 0.5);
+  animation: fillProgress 3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fillProgress {
+  to { width: 98%; }
 }
 

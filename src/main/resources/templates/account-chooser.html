@@ -18,6 +18,22 @@
         <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
     </div>
 
+    <!-- Stunning Premium SSO Loader Overlay -->
+    <div id="sso-loading-overlay" class="sso-loader-overlay" style="display: none;">
+        <div class="sso-loader-card">
+            <div class="sso-spinner-wrapper">
+                <div class="sso-spinner-outer"></div>
+                <div class="sso-spinner-inner"></div>
+                <div class="sso-spinner-logo">✦</div>
+            </div>
+            <div class="sso-loader-text" id="sso-loader-text">Securing your session...</div>
+            <div class="sso-loader-subtext">Connecting to Auralife SSO</div>
+            <div class="sso-progress-bar">
+                <div class="sso-progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="top-controls">
         <div class="custom-dropdown" id="lang-dropdown">
             <div class="dropdown-selected" onclick="toggleDropdown()">
@@ -80,6 +96,7 @@
             <a href="javascript:void(0)" onclick="skipChooserAndGo('/auth/page/signup')" style="font-size: 0.9rem; color: var(--text-primary); text-decoration: none; opacity: 0.8;" th:text="#{chooser.signup}">
                 Create new account
             </a>
+
         </div>
     </div>
 
@@ -127,10 +144,57 @@
                         <div class="account-email">${acc.email}</div>
                         ${(!acc.active && hasToken) ? `<div class="account-status" style="font-size: 0.8rem; color: #ff9b42; margin-top: 4px;">${signedOutLabel}</div>` : ''}
                     </div>
+                    <button class="remove-account-btn" title="Remove account" aria-label="Remove account">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
                 `;
+
+                // Attach delete button handler
+                const deleteBtn = item.querySelector('.remove-account-btn');
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    accounts = accounts.filter(a => a.email !== acc.email);
+                    localStorage.setItem('savedAccounts', JSON.stringify(accounts));
+                    item.style.transform = 'scale(0.8) translateY(-10px)';
+                    item.style.opacity = '0';
+                    setTimeout(() => {
+                        item.remove();
+                        if (accounts.length === 0) {
+                            window.location.href = '/auth/page/login';
+                        }
+                    }, 300);
+                });
                 
                 item.addEventListener('click', async () => {
                     const appId = safeStr(serverAppId) || sessionStorage.getItem('app_id') || 'AURALIFE';
+                    
+                    // Trigger clicked animations on selected items
+                    document.querySelectorAll('.account-item').forEach(el => {
+                        if (el === item) {
+                            el.classList.add('clicked-active');
+                        } else {
+                            el.classList.add('disabled-sibling');
+                        }
+                    });
+
+                    // Trigger sso loading overlay
+                    const overlay = document.getElementById('sso-loading-overlay');
+                    const loaderText = document.getElementById('sso-loader-text');
+                    if (overlay) {
+                        overlay.style.display = 'flex';
+                        void overlay.offsetWidth;
+                        overlay.classList.add('active');
+                    }
+                    if (loaderText) {
+                        loaderText.innerText = `Connecting to ${appId === 'AURALIFE' ? 'Auralife SSO' : appId}...`;
+                    }
+
+                    // 800ms loading delay for micro-interaction feel
+                    await new Promise(resolve => setTimeout(resolve, 800));
+
                     const token = acc.token;
                     
                     if (hasToken) {
@@ -175,6 +239,15 @@
                                 }
                                 return;
                             } else {
+                                // Deactivate overlay on error
+                                if (overlay) {
+                                    overlay.classList.remove('active');
+                                    setTimeout(() => { overlay.style.display = 'none'; }, 500);
+                                }
+                                document.querySelectorAll('.account-item').forEach(el => {
+                                    el.classList.remove('clicked-active', 'disabled-sibling');
+                                });
+
                                 const data = await res.json().catch(() => ({}));
                                 const errorMsg = data.message || "SSO exchange failed";
                                 if (typeof showToast === 'function') {
@@ -182,9 +255,18 @@
                                 } else {
                                     console.error("SSO Error:", errorMsg);
                                 }
-                                return; // Don't redirect, stay on page to show error
+                                return;
                             }
                         } catch (e) {
+                            // Deactivate overlay on failure
+                            if (overlay) {
+                                overlay.classList.remove('active');
+                                setTimeout(() => { overlay.style.display = 'none'; }, 500);
+                            }
+                            document.querySelectorAll('.account-item').forEach(el => {
+                                el.classList.remove('clicked-active', 'disabled-sibling');
+                            });
+
                             console.error("SSO exchange failed:", e);
                             if (typeof showToast === 'function') {
                                 showToast("Connection error occurred. Please try again.", 'error');
